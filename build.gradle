@@ -42,12 +42,6 @@ configFile.withReader {
 	project.ext.config = new ConfigSlurper().parse prop
 }
 
-sourceSets.main {
-	java {
-		srcDirs '../../Globals/Mapwriter Factions'
-	}
-}
-
 dependencies {
 	if (config.isSet('dependicies')) {
 		def dep = config.dependicies.split(", ")
