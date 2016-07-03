@@ -184,3 +184,16 @@ mw.task.rebuildregionstask.chatmsg.rebuild.compleet=rebuild task complete
 mw.msg.tp.disabled=teleportation is disabled in config
 mw.msg.tp.dimError=cannot teleport to marker in different dimension
 mw.msg.warp.error=teleport command is set to 'warp', can only warp to markers
+
+#Custom Additions
+mw.gui.mwgui.helptext.factionmap=Toggle Faction Map in chat
+mw.gui.mwgui.helptext.forceregenerate=Force Regenerates. Reloads the map to fix the flashing :)
+
+mw.gui.mwguifactiondialog.title.edit=Edit Faction
+mw.gui.mwguifactiondialog.editfactionImage=Image Loc
+mw.gui.mwguifactiondialog.editfactionName=Name
+mw.gui.mwguifactiondialog.editfactionColor=Color
+
+mw.gui.ScrollableColorSelector.Red=Red
+mw.gui.ScrollableColorSelector.Green=Green
+mw.gui.ScrollableColorSelector.Blue=Blue

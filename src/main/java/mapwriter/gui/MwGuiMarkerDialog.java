@@ -8,9 +8,11 @@ import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+/* TODO:
+ *  - Clean up this mess of a file and any others. */
+
 @SideOnly(Side.CLIENT)
-public class MwGuiMarkerDialog extends MwGuiTextDialog
-{
+public class MwGuiMarkerDialog extends MwGuiTextDialog {
 	private final MarkerManager markerManager;
 	private Marker editingMarker;
 	private String markerName = "";
@@ -21,8 +23,7 @@ public class MwGuiMarkerDialog extends MwGuiTextDialog
 	private int state = 0;
 	private int dimension = 0;
 
-	public MwGuiMarkerDialog(GuiScreen parentScreen, MarkerManager markerManager, String markerName, String markerGroup, int x, int y, int z, int dimension)
-	{
+	public MwGuiMarkerDialog(GuiScreen parentScreen, MarkerManager markerManager, String markerName, String markerGroup, int x, int y, int z, int dimension) {
 		super(parentScreen, I18n.format("mw.gui.mwguimarkerdialog.title.new") + ":", markerName, I18n.format("mw.gui.mwguimarkerdialog.error"));
 		this.markerManager = markerManager;
 		this.markerName = markerName;
@@ -34,8 +35,7 @@ public class MwGuiMarkerDialog extends MwGuiTextDialog
 		this.dimension = dimension;
 	}
 
-	public MwGuiMarkerDialog(GuiScreen parentScreen, MarkerManager markerManager, Marker editingMarker)
-	{
+	public MwGuiMarkerDialog(GuiScreen parentScreen, MarkerManager markerManager, Marker editingMarker) {
 		super(parentScreen, I18n.format("mw.gui.mwguimarkerdialog.title.edit") + ":", editingMarker.name, I18n.format("mw.gui.mwguimarkerdialog.error"));
 		this.markerManager = markerManager;
 		this.editingMarker = editingMarker;
@@ -48,68 +48,60 @@ public class MwGuiMarkerDialog extends MwGuiTextDialog
 	}
 
 	@Override
-	public boolean submit()
-	{
+	public boolean submit() {
 		boolean done = false;
-		switch (this.state)
-		{
-		case 0:
-			this.markerName = this.getInputAsString();
-			if (this.inputValid)
-			{
-				this.title = I18n.format("mw.gui.mwguimarkerdialog.title.group") + ":";
-				this.setText(this.markerGroup);
-				this.error = I18n.format("mw.gui.mwguimarkerdialog.error.group");
-				this.state++;
-			}
-			break;
-		case 1:
-			this.markerGroup = this.getInputAsString();
-			if (this.inputValid)
-			{
-				this.title = I18n.format("mw.gui.mwguimarkerdialog.title.x") + ":";
-				this.setText("" + this.markerX);
-				this.error = I18n.format("mw.gui.mwguimarkerdialog.error.x");
-				this.state++;
-			}
-			break;
-		case 2:
-			this.markerX = this.getInputAsInt();
-			if (this.inputValid)
-			{
-				this.title = I18n.format("mw.gui.mwguimarkerdialog.title.y") + ":";
-				this.setText("" + this.markerY);
-				this.error = I18n.format("mw.gui.mwguimarkerdialog.error.y");
-				this.state++;
-			}
-			break;
-		case 3:
-			this.markerY = this.getInputAsInt();
-			if (this.inputValid)
-			{
-				this.title = I18n.format("mw.gui.mwguimarkerdialog.title.z") + ":";
-				this.setText("" + this.markerZ);
-				this.error = I18n.format("mw.gui.mwguimarkerdialog.error.z");
-				this.state++;
-			}
-			break;
-		case 4:
-			this.markerZ = this.getInputAsInt();
-			if (this.inputValid)
-			{
-				done = true;
-				int colour = Utils.getCurrentColour();
-				if (this.editingMarker != null)
-				{
-					colour = this.editingMarker.colour;
-					this.markerManager.delMarker(this.editingMarker);
-					this.editingMarker = null;
+		switch (this.state) {
+			case 0:
+				this.markerName = this.getInputAsString();
+				if (this.inputValid) {
+					this.title = I18n.format("mw.gui.mwguimarkerdialog.title.group") + ":";
+					this.setText(this.markerGroup);
+					this.error = I18n.format("mw.gui.mwguimarkerdialog.error.group");
+					this.state++;
 				}
-				this.markerManager.addMarker(this.markerName, this.markerGroup, this.markerX, this.markerY, this.markerZ, this.dimension, colour);
-				this.markerManager.setVisibleGroupName(this.markerGroup);
-				this.markerManager.update();
-			}
-			break;
+				break;
+			case 1:
+				this.markerGroup = this.getInputAsString();
+				if (this.inputValid) {
+					this.title = I18n.format("mw.gui.mwguimarkerdialog.title.x") + ":";
+					this.setText("" + this.markerX);
+					this.error = I18n.format("mw.gui.mwguimarkerdialog.error.x");
+					this.state++;
+				}
+				break;
+			case 2:
+				this.markerX = this.getInputAsInt();
+				if (this.inputValid) {
+					this.title = I18n.format("mw.gui.mwguimarkerdialog.title.y") + ":";
+					this.setText("" + this.markerY);
+					this.error = I18n.format("mw.gui.mwguimarkerdialog.error.y");
+					this.state++;
+				}
+				break;
+			case 3:
+				this.markerY = this.getInputAsInt();
+				if (this.inputValid) {
+					this.title = I18n.format("mw.gui.mwguimarkerdialog.title.z") + ":";
+					this.setText("" + this.markerZ);
+					this.error = I18n.format("mw.gui.mwguimarkerdialog.error.z");
+					this.state++;
+				}
+				break;
+			case 4:
+				this.markerZ = this.getInputAsInt();
+				if (this.inputValid) {
+					done = true;
+					int colour = Utils.getCurrentColour();
+					if (this.editingMarker != null) {
+						colour = this.editingMarker.colour;
+						this.markerManager.delMarker(this.editingMarker);
+						this.editingMarker = null;
+					}
+					this.markerManager.addMarker(this.markerName, this.markerGroup, this.markerX, this.markerY, this.markerZ, this.dimension, colour);
+					this.markerManager.setVisibleGroupName(this.markerGroup);
+					this.markerManager.update();
+				}
+				break;
 		}
 		return done;
 	}

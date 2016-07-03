@@ -7,53 +7,42 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import mapwriter.region.MwChunk;
 import mapwriter.region.RegionManager;
 
-public class SaveChunkTask extends Task
-{
+public class SaveChunkTask extends Task {
 	private MwChunk chunk;
 	private RegionManager regionManager;
 	private AtomicBoolean Running = new AtomicBoolean();
 	private static HashMap<Long, SaveChunkTask> chunksUpdating = new HashMap<Long, SaveChunkTask>();
 
-	public SaveChunkTask(MwChunk chunk, RegionManager regionManager)
-	{
+	public SaveChunkTask(MwChunk chunk, RegionManager regionManager) {
 		this.chunk = chunk;
 		this.regionManager = regionManager;
 	}
 
 	@Override
-	public void run()
-	{
+	public void run() {
 		this.Running.set(true);
 		this.chunk.write(this.regionManager.regionFileCache);
 	}
 
 	@Override
-	public void onComplete()
-	{
+	public void onComplete() {
 		Long coords = this.chunk.getCoordIntPair();
 		SaveChunkTask.chunksUpdating.remove(coords);
 		this.Running.set(false);
 	}
 
 	@Override
-	public boolean CheckForDuplicate()
-	{
+	public boolean CheckForDuplicate() {
 		Long coords = this.chunk.getCoordIntPair();
 
-		if (!SaveChunkTask.chunksUpdating.containsKey(coords))
-		{
+		if (!SaveChunkTask.chunksUpdating.containsKey(coords)) {
 			SaveChunkTask.chunksUpdating.put(coords, this);
 			return false;
-		}
-		else
-		{
+		} else {
 			SaveChunkTask task2 = (SaveChunkTask) SaveChunkTask.chunksUpdating.get(coords);
-			if (task2.Running.get() == false)
-			{
+			if (task2.Running.get() == false) {
 				task2.UpdateChunkData(this.chunk, this.regionManager);
-			}
-			else
-			{
+			} else {
 				SaveChunkTask.chunksUpdating.put(coords, this);
 				return false;
 			}
@@ -61,8 +50,7 @@ public class SaveChunkTask extends Task
 		return true;
 	}
 
-	public void UpdateChunkData(MwChunk chunk, RegionManager regionManager)
-	{
+	public void UpdateChunkData(MwChunk chunk, RegionManager regionManager) {
 		this.chunk = chunk;
 		this.regionManager = regionManager;
 	}

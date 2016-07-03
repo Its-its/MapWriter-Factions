@@ -1,68 +1,87 @@
 package mapwriter.overlay;
 
 import java.awt.Point;
+import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import mapwriter.api.IMwChunkOverlay;
 import mapwriter.api.IMwDataProvider;
+import mapwriter.gui.MwGui;
 import mapwriter.map.MapView;
 import mapwriter.map.mapmode.MapMode;
 import net.minecraft.util.MathHelper;
 
-public class OverlayGrid implements IMwDataProvider
-{
+public class OverlayGrid implements IMwDataProvider {
 
-	public class ChunkOverlay implements IMwChunkOverlay
-	{
+	public class ChunkOverlay implements IMwChunkOverlay {
 
 		Point coord;
 
-		public ChunkOverlay(int x, int z)
-		{
+		public ChunkOverlay(int x, int z) {
 			this.coord = new Point(x, z);
 		}
 
 		@Override
-		public Point getCoordinates()
-		{
+		public Point getCoordinates() {
 			return this.coord;
 		}
 
 		@Override
-		public int getColor()
-		{
+		public int getColor() {
 			return 0x00ffffff;
 		}
 
 		@Override
-		public float getFilling()
-		{
+		public float getFilling() {
 			return 1.0f;
 		}
 
 		@Override
-		public boolean hasBorder()
-		{
+		public boolean hasBorder() {
 			return true;
 		}
 
 		@Override
-		public float getBorderWidth()
-		{
+		public float getBorderWidth() {
 			return 0.5f;
 		}
 
 		@Override
-		public int getBorderColor()
-		{
+		public int getBorderColor() {
 			return 0xff000000;
+		}
+
+		@Override
+		public boolean customBorder() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void drawCustomBorder(Double topCorner, Double botCorner) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean custom() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void drawCustom(Double topCorner, Double botCorner) {
+			// TODO Auto-generated method stub
+			
 		}
 
 	}
 
 	@Override
-	public ArrayList<IMwChunkOverlay> getChunksOverlay(int dim, double centerX, double centerZ, double minX, double minZ, double maxX, double maxZ)
-	{
+	public List<IMwChunkOverlay> getChunksOverlay(int dim, double centerX,
+			double centerZ, double minX, double minZ, double maxX, double maxZ) {
 		int minChunkX = (MathHelper.ceiling_double_int(minX) >> 4) - 1;
 		int minChunkZ = (MathHelper.ceiling_double_int(minZ) >> 4) - 1;
 		int maxChunkX = (MathHelper.ceiling_double_int(maxX) >> 4) + 1;
@@ -75,11 +94,9 @@ public class OverlayGrid implements IMwDataProvider
 		int limitMinZ = Math.max(minChunkZ, cZ - 100);
 		int limitMaxZ = Math.min(maxChunkZ, cZ + 100);
 
-		ArrayList<IMwChunkOverlay> chunks = new ArrayList<IMwChunkOverlay>();
-		for (int x = limitMinX; x <= limitMaxX; x++)
-		{
-			for (int z = limitMinZ; z <= limitMaxZ; z++)
-			{
+		List<IMwChunkOverlay> chunks = new LinkedList<IMwChunkOverlay>();
+		for (int x = limitMinX; x <= limitMaxX; x++) {
+			for (int z = limitMinZ; z <= limitMaxZ; z++) {
 				chunks.add(new ChunkOverlay(x, z));
 			}
 		}
@@ -88,56 +105,59 @@ public class OverlayGrid implements IMwDataProvider
 	}
 
 	@Override
-	public String getStatusString(int dim, int bX, int bY, int bZ)
-	{
+	public String getStatusString(int dim, int bX, int bY, int bZ) {
 		return "";
 	}
 
 	@Override
-	public void onMiddleClick(int dim, int bX, int bZ, MapView mapview)
-	{
+	public void onMiddleClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
 	}
 
 	@Override
-	public void onDimensionChanged(int dimension, MapView mapview)
-	{
+	public void onDimensionChanged(int dimension, MapView mapview) {
 	}
 
 	@Override
-	public void onMapCenterChanged(double vX, double vZ, MapView mapview)
-	{
-
-	}
-
-	@Override
-	public void onZoomChanged(int level, MapView mapview)
-	{
+	public void onMapCenterChanged(double vX, double vZ, MapView mapview) {
 
 	}
 
 	@Override
-	public void onOverlayActivated(MapView mapview)
-	{
+	public void onZoomChanged(int level, MapView mapview) {
 
 	}
 
 	@Override
-	public void onOverlayDeactivated(MapView mapview)
-	{
+	public void onOverlayActivated(MapView mapview) {
 
 	}
 
 	@Override
-	public void onDraw(MapView mapview, MapMode mapmode)
-	{
+	public void onOverlayDeactivated(MapView mapview) {
 
 	}
 
 	@Override
-	public boolean onMouseInput(MapView mapview, MapMode mapmode)
-	{
+	public void onDraw(MapView mapview, MapMode mapmode) {
+
+	}
+
+	@Override
+	public boolean onMouseInput(MapView mapview, MapMode mapmode) {
 
 		return false;
+	}
+
+	@Override
+	public void onLeftClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onRightClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -22,22 +22,18 @@ import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.chunk.Chunk;
 
-public class Utils
-{
-	public static int[] integerListToIntArray(List<Integer> list)
-	{
+public class Utils {
+	public static int[] integerListToIntArray(List<Integer> list) {
 		// convert List of integers to integer array
 		int size = list.size();
 		int[] array = new int[size];
-		for (int i = 0; i < size; i++)
-		{
+		for (int i = 0; i < size; i++) {
 			array[i] = list.get(i);
 		}
 		return array;
 	}
 
-	public static String mungeString(String s)
-	{
+	public static String mungeString(String s) {
 		s = s.replace('.', '_');
 		s = s.replace('-', '_');
 		s = s.replace(' ', '_');
@@ -45,32 +41,23 @@ public class Utils
 		s = s.replace('\\', '_');
 		return Reference.patternInvalidChars.matcher(s).replaceAll("");
 	}
-	
-	public static String mungeStringForConfig(String s)
-	{
+
+	public static String mungeStringForConfig(String s) {
 		return Reference.patternInvalidChars2.matcher(s).replaceAll("");
 	}
 
-	public static File getFreeFilename(File dir, String baseName, String ext)
-	{
+	public static File getFreeFilename(File dir, String baseName, String ext) {
 		int i = 0;
 		File outputFile;
-		if (dir != null)
-		{
+		if (dir != null) {
 			outputFile = new File(dir, baseName + "." + ext);
-		}
-		else
-		{
+		} else {
 			outputFile = new File(baseName + "." + ext);
 		}
-		while (outputFile.exists() && (i < 1000))
-		{
-			if (dir != null)
-			{
+		while (outputFile.exists() && (i < 1000)) {
+			if (dir != null) {
 				outputFile = new File(dir, baseName + "." + i + "." + ext);
-			}
-			else
-			{
+			} else {
 				outputFile = new File(baseName + "." + i + "." + ext);
 			}
 			i++;
@@ -79,32 +66,25 @@ public class Utils
 	}
 
 	// send an ingame chat message and console log
-	public static void printBoth(String msg)
-	{
+	public static void printBoth(String msg) {
 		EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
-		if (thePlayer != null)
-		{
+		if (thePlayer != null) {
 			thePlayer.addChatMessage(new ChatComponentText(msg));
 		}
 		Logging.log("%s", msg);
 	}
 
-	public static File getDimensionDir(File worldDir, int dimension)
-	{
+	public static File getDimensionDir(File worldDir, int dimension) {
 		File dimDir;
-		if (dimension != 0)
-		{
+		if (dimension != 0) {
 			dimDir = new File(worldDir, "DIM" + dimension);
-		}
-		else
-		{
+		} else {
 			dimDir = worldDir;
 		}
 		return dimDir;
 	}
 
-	public static IntBuffer allocateDirectIntBuffer(int size)
-	{
+	public static IntBuffer allocateDirectIntBuffer(int size) {
 		return ByteBuffer.allocateDirect(size * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
 	}
 
@@ -113,8 +93,7 @@ public class Utils
 	// works by making sure all bits to the right of the highest set bit are 1,
 	// then
 	// adding 1 to get the answer.
-	public static int nextHighestPowerOf2(int v)
-	{
+	public static int nextHighestPowerOf2(int v) {
 		// decrement by 1 (to handle cases where v is already a power of two)
 		v--;
 
@@ -130,45 +109,34 @@ public class Utils
 		return v + 1;
 	}
 
-	public static String getCurrentDateString()
-	{
+	public static String getCurrentDateString() {
 		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmm");
 		return dateFormat.format(new Date());
 	}
 
-	public static int distToChunkSq(int x, int z, Chunk chunk)
-	{
+	public static int distToChunkSq(int x, int z, Chunk chunk) {
 		int dx = ((chunk.xPosition << 4) + 8) - x;
 		int dz = ((chunk.zPosition << 4) + 8) - z;
 		return (dx * dx) + (dz * dz);
 	}
 
-	public static String getWorldName()
-	{
+	public static String getWorldName() {
 		String worldName;
 
-		if (Minecraft.getMinecraft().isIntegratedServerRunning())
-		{
+		if (Minecraft.getMinecraft().isIntegratedServerRunning()) {
 			// cannot use this.mc.theWorld.getWorldInfo().getWorldName() as it
 			// is set statically to "MpServer".
 			IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
 			worldName = (server != null) ? server.getFolderName() : "sp_world";
-		}
-		else
-		{
+		} else {
 			worldName = Minecraft.getMinecraft().getCurrentServerData().serverIP;
-			if (!Config.portNumberInWorldNameEnabled)
-			{
+			if (!Config.portNumberInWorldNameEnabled) {
 				worldName = worldName.substring(0, worldName.indexOf(":"));
-			}
-			else
-			{
-				if (worldName.indexOf(":") == -1)
-				{// standard port is missing. Adding it
+			} else {
+				if (worldName.indexOf(":") == -1) {// standard port is missing.
+													// Adding it
 					worldName += "_25565";
-				}
-				else
-				{
+				} else {
 					worldName = worldName.replace(":", "_");
 				}
 			}
@@ -180,60 +148,46 @@ public class Utils
 
 		// if something went wrong make sure the name is not blank
 		// (causes crash on start up due to empty configuration section)
-		if (worldName == "")
-		{
+		if (worldName == "") {
 			worldName = "default";
 		}
 		return worldName;
 	}
 
-	public static void openWebLink(URI p_175282_1_)
-	{
-		try
-		{
+	public static void openWebLink(URI p_175282_1_) {
+		try {
 			Class<?> oclass = Class.forName("java.awt.Desktop");
-			Object object = oclass.getMethod("getDesktop", new Class[0]).invoke((Object) null, new Object[0]);
-			oclass.getMethod("browse", new Class[]
-			{
-				URI.class
-			}).invoke(object, new Object[]
-			{
-				p_175282_1_
-			});
-		}
-		catch (Throwable throwable)
-		{
-			Logging.logError("Couldn\'t open link %s", throwable.getStackTrace().toString());
+			Object object = oclass.getMethod("getDesktop", new Class[0])
+					.invoke((Object) null, new Object[0]);
+			oclass.getMethod("browse", new Class[] { URI.class }).invoke(
+					object, new Object[] { p_175282_1_ });
+		} catch (Throwable throwable) {
+			Logging.logError("Couldn\'t open link %s", throwable
+					.getStackTrace().toString());
 		}
 	}
 
-	public static String stringArrayToString(String[] arr)
-	{
+	public static String stringArrayToString(String[] arr) {
 		StringBuilder builder = new StringBuilder();
-		for (String s : arr)
-		{
+		for (String s : arr) {
 			builder.append(I18n.format(s));
 			builder.append("\n");
 		}
 		return builder.toString();
 	}
 
-	public static int getMaxWidth(String[] arr, String[] arr2)
-	{
+	public static int getMaxWidth(String[] arr, String[] arr2) {
 		FontRenderer fontRendererObj = Minecraft.getMinecraft().fontRendererObj;
 		int Width = 1;
-		for (int i = 0; i < arr.length; i++)
-		{
+		for (int i = 0; i < arr.length; i++) {
 			int w1 = 0;
 			int w2 = 0;
 
-			if (i < arr.length)
-			{
+			if (i < arr.length) {
 				String s = I18n.format(arr[i]);
 				w1 = fontRendererObj.getStringWidth(s);
 			}
-			if ((arr2 != null) && (i < arr2.length))
-			{
+			if ((arr2 != null) && (i < arr2.length)) {
 				String s = I18n.format(arr2[i]);
 				w2 = fontRendererObj.getStringWidth(s);
 				w2 += 65;
@@ -244,39 +198,26 @@ public class Utils
 		return Width;
 	}
 
-	private static int[] colours = new int[]
-	{
-			0xff0000,
-			0x00ff00,
-			0x0000ff,
-			0xffff00,
-			0xff00ff,
-			0x00ffff,
-			0xff8000,
-			0x8000ff
-	};
+	private static int[] colours = new int[] { 0xff0000, 0x00ff00, 0x0000ff,
+			0xffff00, 0xff00ff, 0x00ffff, 0xff8000, 0x8000ff };
 	// static so that current index is shared between all markers
 	public static int colourIndex = 0;
 
-	private static int getColoursLengt()
-	{
+	private static int getColoursLength() {
 		return colours.length;
 	}
 
-	public static int getCurrentColour()
-	{
+	public static int getCurrentColour() {
 		return 0xff000000 | colours[colourIndex];
 	}
 
-	public static int getNextColour()
-	{
-		Utils.colourIndex = (Utils.colourIndex + 1) % Utils.getColoursLengt();
+	public static int getNextColour() {
+		Utils.colourIndex = (Utils.colourIndex + 1) % Utils.getColoursLength();
 		return Utils.getCurrentColour();
 	}
 
-	public static int getPrevColour()
-	{
-		Utils.colourIndex = ((Utils.colourIndex + Utils.getColoursLengt()) - 1) % Utils.getColoursLengt();
+	public static int getPrevColour() {
+		Utils.colourIndex = ((Utils.colourIndex + Utils.getColoursLength()) - 1) % Utils.getColoursLength();
 		return Utils.getCurrentColour();
 	}
 
@@ -342,25 +283,17 @@ public class Utils
 	 * well-typed, and only if <code>strict</code> was true
 	 */
 	@SuppressWarnings("rawtypes")
-	public static <K, V> Map<K, V> checkedMapByCopy(Map rawMap, Class<K> keyType, Class<V> valueType, boolean strict) throws ClassCastException
-	{
+	public static <K, V> Map<K, V> checkedMapByCopy(Map rawMap, Class<K> keyType, Class<V> valueType, boolean strict) throws ClassCastException {
 		Map<K, V> m2 = new HashMap<K, V>(((rawMap.size() * 4) / 3) + 1);
 		Iterator it = rawMap.entrySet().iterator();
-		while (it.hasNext())
-		{
+		while (it.hasNext()) {
 			Map.Entry e = (Map.Entry) it.next();
-			try
-			{
+			try {
 				m2.put(keyType.cast(e.getKey()), valueType.cast(e.getValue()));
-			}
-			catch (ClassCastException x)
-			{
-				if (strict)
-				{
+			} catch (ClassCastException x) {
+				if (strict) {
 					throw x;
-				}
-				else
-				{
+				} else {
 					System.out.println("not assignable");
 				}
 			}

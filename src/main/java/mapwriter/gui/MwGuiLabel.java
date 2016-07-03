@@ -114,7 +114,7 @@ public class MwGuiLabel
 
 	public boolean posWithin(int x, int y)
 	{
-		return (x >= (this.x + spacingX)) && (y >= (this.y + spacingY)) && (x <= (this.x + this.w + spacingX)) && (y <= (this.y + this.h + spacingY));
+		return (x >= (this.x - spacingX)) && (y > (this.y - spacingY)) && (x < (this.x + this.w + spacingX)) && (y <= (this.y + this.h + spacingY));
 	}
 
 	public void setDrawBackground(boolean enable)

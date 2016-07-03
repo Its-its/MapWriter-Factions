@@ -1,106 +1,121 @@
 package mapwriter.overlay;
 
 import java.awt.Point;
+import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 import mapwriter.api.IMwChunkOverlay;
 import mapwriter.api.IMwDataProvider;
+import mapwriter.gui.MwGui;
 import mapwriter.map.MapView;
 import mapwriter.map.mapmode.MapMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.MathHelper;
 
-public class OverlaySlime implements IMwDataProvider
-{
+public class OverlaySlime implements IMwDataProvider {
 
 	public static boolean seedFound = false;
 	public static boolean seedAsked = false;
 	private static long seed = -1;
 
-	public static void setSeed(long seed)
-	{
+	public static void setSeed(long seed) {
 		OverlaySlime.seed = seed;
 		OverlaySlime.seedFound = true;
 	}
 
-	public static void askSeed()
-	{
+	public static void askSeed() {
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-		if (player == null)
-		{
+		if (player == null) {
 			return;
 		}
 		player.sendChatMessage("/seed"); // Send the /seed command to the server
 		seedAsked = true;
 	}
 
-	public static void reset()
-	{
+	public static void reset() {
 		seedFound = false;
 		seedAsked = false;
 		seed = -1;
 	}
 
-	public class ChunkOverlay implements IMwChunkOverlay
-	{
+	public class ChunkOverlay implements IMwChunkOverlay {
 
 		Point coord;
 
-		public ChunkOverlay(int x, int z)
-		{
+		public ChunkOverlay(int x, int z) {
 			this.coord = new Point(x, z);
 		}
 
 		@Override
-		public Point getCoordinates()
-		{
+		public Point getCoordinates() {
 			return this.coord;
 		}
 
 		@Override
-		public int getColor()
-		{
+		public int getColor() {
 			return 0x5000ff00;
 		}
 
 		@Override
-		public float getFilling()
-		{
+		public float getFilling() {
 			return 1.0f;
 		}
 
 		@Override
-		public boolean hasBorder()
-		{
+		public boolean hasBorder() {
 			return true;
 		}
 
 		@Override
-		public float getBorderWidth()
-		{
+		public float getBorderWidth() {
 			return 0.5f;
 		}
 
 		@Override
-		public int getBorderColor()
-		{
+		public int getBorderColor() {
 			return 0xff000000;
+		}
+
+		@Override
+		public boolean customBorder() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void drawCustomBorder(Double topCorner, Double botCorner) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean custom() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void drawCustom(Double topCorner, Double botCorner) {
+			// TODO Auto-generated method stub
+			
 		}
 
 	}
 
 	@Override
-	public ArrayList<IMwChunkOverlay> getChunksOverlay(int dim, double centerX, double centerZ, double minX, double minZ, double maxX, double maxZ)
-	{
+	public List<IMwChunkOverlay> getChunksOverlay(int dim, double centerX,
+			double centerZ, double minX, double minZ, double maxX, double maxZ) {
 
 		// We should pass the center of the map too to reduce the display like
 		// in this case
 		// and the zoom lvl, to provide higher level informations
 
-		if (Minecraft.getMinecraft().thePlayer.getEntityWorld().provider.getDimensionId() != dim)
-		{
+		if (Minecraft.getMinecraft().thePlayer.getEntityWorld().provider
+				.getDimensionId() != dim) {
 			return new ArrayList<IMwChunkOverlay>();
 		}
 
@@ -116,23 +131,20 @@ public class OverlaySlime implements IMwDataProvider
 		int limitMinZ = Math.max(minChunkZ, cZ - 100);
 		int limitMaxZ = Math.min(maxChunkZ, cZ + 100);
 
-		if (!seedFound && !seedAsked)
-		{
+		if (!seedFound && !seedAsked) {
 			// We don't have the seed and we didn't ask for it yet. Let's go!
 			askSeed();
 		}
 
-		ArrayList<IMwChunkOverlay> chunks = new ArrayList<IMwChunkOverlay>();
-		if (seedFound)
-		{ // If we know the seed, then add the overlay
-			for (int x = limitMinX; x <= limitMaxX; x++)
-			{
-				for (int z = limitMinZ; z <= limitMaxZ; z++)
-				{
+		List<IMwChunkOverlay> chunks = new LinkedList<IMwChunkOverlay>();
+		if (seedFound) { // If we know the seed, then add the overlay
+			for (int x = limitMinX; x <= limitMaxX; x++) {
+				for (int z = limitMinZ; z <= limitMaxZ; z++) {
 
-					Random rnd = new Random((seed + (x * x * 0x4c1906) + (x * 0x5ac0db) + (z * z * 0x4307a7L) + (z * 0x5f24f)) ^ 0x3ad8025f);
-					if (rnd.nextInt(10) == 0)
-					{
+					Random rnd = new Random(
+							(seed + (x * x * 0x4c1906) + (x * 0x5ac0db)
+									+ (z * z * 0x4307a7L) + (z * 0x5f24f)) ^ 0x3ad8025f);
+					if (rnd.nextInt(10) == 0) {
 						chunks.add(new ChunkOverlay(x, z));
 					}
 				}
@@ -143,55 +155,58 @@ public class OverlaySlime implements IMwDataProvider
 	}
 
 	@Override
-	public String getStatusString(int dim, int bX, int bY, int bZ)
-	{
+	public String getStatusString(int dim, int bX, int bY, int bZ) {
 		return "";
 	}
 
 	@Override
-	public void onMiddleClick(int dim, int bX, int bZ, MapView mapview)
-	{
+	public void onMiddleClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
 	}
 
 	@Override
-	public void onDimensionChanged(int dimension, MapView mapview)
-	{
+	public void onDimensionChanged(int dimension, MapView mapview) {
 	}
 
 	@Override
-	public void onMapCenterChanged(double vX, double vZ, MapView mapview)
-	{
-
-	}
-
-	@Override
-	public void onZoomChanged(int level, MapView mapview)
-	{
+	public void onMapCenterChanged(double vX, double vZ, MapView mapview) {
 
 	}
 
 	@Override
-	public void onOverlayActivated(MapView mapview)
-	{
+	public void onZoomChanged(int level, MapView mapview) {
 
 	}
 
 	@Override
-	public void onOverlayDeactivated(MapView mapview)
-	{
+	public void onOverlayActivated(MapView mapview) {
 
 	}
 
 	@Override
-	public void onDraw(MapView mapview, MapMode mapmode)
-	{
+	public void onOverlayDeactivated(MapView mapview) {
 
 	}
 
 	@Override
-	public boolean onMouseInput(MapView mapview, MapMode mapmode)
-	{
+	public void onDraw(MapView mapview, MapMode mapmode) {
+
+	}
+
+	@Override
+	public boolean onMouseInput(MapView mapview, MapMode mapmode) {
 		return false;
+	}
+
+	@Override
+	public void onLeftClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onRightClick(int dim, int bX, int bZ, MapView mapview, MwGui gui) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

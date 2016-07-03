@@ -8,8 +8,7 @@ import mapwriter.util.Utils;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
 
-public class Marker
-{
+public class Marker {
 	public final String name;
 	public final String groupName;
 	public int x;
@@ -20,8 +19,7 @@ public class Marker
 
 	public Point.Double screenPos = new Point.Double(0, 0);
 
-	public Marker(String name, String groupName, int x, int y, int z, int dimension, int colour)
-	{
+	public Marker(String name, String groupName, int x, int y, int z, int dimension, int colour) {
 		this.name = Utils.mungeStringForConfig(name);
 		this.x = x;
 		this.y = y;
@@ -31,25 +29,21 @@ public class Marker
 		this.groupName = Utils.mungeStringForConfig(groupName);
 	}
 
-	public String getString()
-	{
+	public String getString() {
 		return String.format("%s %s (%d, %d, %d) %d %06x", this.name, this.groupName, this.x, this.y, this.z, this.dimension, this.colour & 0xffffff);
 	}
 
-	public void colourNext()
-	{
+	public void colourNext() {
 		this.colour = Utils.getNextColour();
 	}
 
-	public void colourPrev()
-	{
+	public void colourPrev() {
 		this.colour = Utils.getPrevColour();
 	}
 
-	public void draw(MapMode mapMode, MapView mapView, int borderColour)
-	{
+	public void draw(MapMode mapMode, MapView mapView, int borderColour) {
 		double scale = mapView.getDimensionScaling(this.dimension);
-		Point.Double p = mapMode.getClampedScreenXY(mapView, this.x * scale, this.z * scale);
+		Point.Double p = mapMode.getClampedScreenXY(mapView, (this.x + 0.5D) * scale, (this.z + 0.5D) * scale);
 		this.screenPos.setLocation(p.x + mapMode.xTranslation, p.y + mapMode.yTranslation);
 
 		// draw a coloured rectangle centered on the calculated (x, y)
@@ -64,22 +58,17 @@ public class Marker
 	// arraylist.contains was producing unexpected results in some situations
 	// rather than figure out why i'll just control how two markers are compared
 	@Override
-	public boolean equals(final Object o)
-	{
-		if (this == o)
-		{
-			return true;
-		}
-		if (o instanceof Marker)
-		{
+	public boolean equals(final Object o) {
+		if (this == o) return true;
+		
+		if (o instanceof Marker) {
 			Marker m = (Marker) o;
 			return (this.name == m.name) && (this.groupName == m.groupName) && (this.x == m.x) && (this.y == m.y) && (this.z == m.z) && (this.dimension == m.dimension);
 		}
 		return false;
 	}
 
-	public double getDistanceToMarker(Entity entityIn)
-	{
+	public double getDistanceToMarker(Entity entityIn) {
 		double d0 = this.x - entityIn.posX;
 		double d1 = this.y - entityIn.posY;
 		double d2 = this.z - entityIn.posZ;

@@ -2,14 +2,11 @@ package mapwriter.config;
 
 import mapwriter.util.Reference;
 
-public class Config
-{
-	public static final String[] backgroundModeStringArray =
-	{
+public class Config {
+	public static final String[] backgroundModeStringArray = {
 			"mw.config.backgroundTextureMode.none",
 			"mw.config.backgroundTextureMode.static",
-			"mw.config.backgroundTextureMode.panning"
-	};
+			"mw.config.backgroundTextureMode.panning" };
 
 	// configuration options
 	public static boolean linearTextureScalingDef = true;
@@ -70,6 +67,6 @@ public class Config
 	public static largeMapModeConfig largeMap = new largeMapModeConfig(Reference.catLargeMapConfig);
 	public static smallMapModeConfig smallMap = new smallMapModeConfig(Reference.catSmallMapConfig);
 	public static MapModeConfig fullScreenMap = new MapModeConfig(Reference.catFullMapConfig);
-	
+
 	public static boolean reloadColours = Boolean.parseBoolean(System.getProperty("fml.skipFirstTextureLoad", "true"));
 }

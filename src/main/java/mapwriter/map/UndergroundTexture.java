@@ -10,6 +10,7 @@ import mapwriter.util.Texture;
 import net.minecraft.block.Block;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 
 import org.lwjgl.opengl.GL11;
@@ -63,7 +64,7 @@ public class UndergroundTexture extends Texture
 		@Override
 		public int getLightValue(int x, int y, int z)
 		{
-			return this.chunk.getLightSubtracted(new BlockPos(x, y, z), 0);
+			return this.chunk.getLightFor(EnumSkyBlock.BLOCK, new BlockPos(x, y, z));
 		}
 	}
 

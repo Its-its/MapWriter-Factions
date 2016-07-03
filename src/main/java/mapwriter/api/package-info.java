@@ -2,4 +2,3 @@
 package mapwriter.api;
 
 import net.minecraftforge.fml.common.API;
-

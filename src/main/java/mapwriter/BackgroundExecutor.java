@@ -36,58 +36,47 @@ import mapwriter.util.Logging;
  *
  * e.g. addTask(Task1)
  *      addTask(Task2)
- * 	 addTask(Task3)
+ * 	    addTask(Task3)
  *
  * may run in the order:
- *     Task1.run()
- * 	Task2.run()
+ *    Task1.run()
+ * 	  Task2.run()
  * 	  Task1.onComplete()
- * 	Task3.run()
+ * 	  Task3.run()
  * 	  Task2.onComplete()
  * 	  Task3.onComplete()
  */
 
-public class BackgroundExecutor
-{
-
+public class BackgroundExecutor {
 	private ExecutorService executor;
 	private LinkedList<Task> taskQueue;
 	public boolean closed = false;
 	private boolean doDiag = true;
 
-	public BackgroundExecutor()
-	{
+	public BackgroundExecutor() {
 		this.executor = Executors.newSingleThreadExecutor();
 		this.taskQueue = new LinkedList<Task>();
 	}
 
 	// add a task to the queue
-	public boolean addTask(Task task)
-	{
-		if (!this.closed)
-		{
-			if (!task.CheckForDuplicate())
-			{
+	public boolean addTask(Task task) {
+		if (!this.closed) {
+			if (!task.CheckForDuplicate()) {
 				Future<?> future = this.executor.submit(task);
 				task.setFuture(future);
 				this.taskQueue.add(task);
 			}
 
-			//bit for diagnostics on task left to optimize code
-			if ((this.tasksRemaining() > 500) && this.doDiag)
-			{
+			// bit for diagnostics on task left to optimize code
+			if ((this.tasksRemaining() > 500) && this.doDiag) {
 				this.doDiag = false;
 				Logging.logError("Taskque went over 500 starting diagnostic");
 				this.taskLeftPerType();
 				Logging.logError("End of diagnostic");
-			}
-			else
-			{
+			} else {
 				this.doDiag = true;
 			}
-		}
-		else
-		{
+		} else {
 			Logging.log("MwExecutor.addTask: error: cannot add task to closed executor");
 		}
 		return this.closed;
@@ -97,21 +86,16 @@ public class BackgroundExecutor
 	// finished.
 	// If it has completed then call onComplete for the task.
 	// If it has not completed then push the task back on the queue.
-	public boolean processTaskQueue()
-	{
+	public boolean processTaskQueue() {
 		boolean processed = false;
 		Task task = this.taskQueue.poll();
-		if (task != null)
-		{
-			if (task.isDone())
-			{
+		if (task != null) {
+			if (task.isDone()) {
 				task.printException();
 				task.onComplete();
 
 				processed = true;
-			}
-			else
-			{
+			} else {
 				// put entry back on top of queue
 				this.taskQueue.push(task);
 			}
@@ -119,35 +103,25 @@ public class BackgroundExecutor
 		return !processed;
 	}
 
-	public boolean processRemainingTasks(int attempts, int delay)
-	{
-		while ((this.taskQueue.size() > 0) && (attempts > 0))
-		{
-			if (this.processTaskQueue())
-			{
-				try
-				{
+	public boolean processRemainingTasks(int attempts, int delay) {
+		while ((this.taskQueue.size() > 0) && (attempts > 0)) {
+			if (this.processTaskQueue()) {
+				try {
 					Thread.sleep(delay);
-				}
-				catch (Exception e)
-				{
-				}
+				} catch (Exception e) {}
 				attempts--;
 			}
 		}
 		return (attempts <= 0);
 	}
 
-	public int tasksRemaining()
-	{
+	public int tasksRemaining() {
 		return this.taskQueue.size();
 	}
 
-	public boolean close()
-	{
+	public boolean close() {
 		boolean error = true;
-		try
-		{
+		try {
 			this.taskLeftPerType();
 			// stop accepting new tasks
 			this.executor.shutdown();
@@ -156,9 +130,7 @@ public class BackgroundExecutor
 			// should already be terminated, but just in case...
 			error = !this.executor.awaitTermination(10L, TimeUnit.SECONDS);
 			error = false;
-		}
-		catch (InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			Logging.log("error: IO task was interrupted during shutdown");
 			e.printStackTrace();
 		}
@@ -166,19 +138,14 @@ public class BackgroundExecutor
 		return error;
 	}
 
-	private void taskLeftPerType()
-	{
+	private void taskLeftPerType() {
 		HashMap<String, Object> tasksLeft = new HashMap<String, Object>();
 
-		for (Task t : this.taskQueue)
-		{
+		for (Task t : this.taskQueue) {
 			String className = t.getClass().toString();
-			if (tasksLeft.containsKey(className))
-			{
-				tasksLeft.put(className, ((Integer)tasksLeft.get(className)) + 1);
-			}
-			else
-			{
+			if (tasksLeft.containsKey(className)) {
+				tasksLeft.put(className, ((Integer) tasksLeft.get(className)) + 1);
+			} else {
 				tasksLeft.put(className, 1);
 			}
 		}

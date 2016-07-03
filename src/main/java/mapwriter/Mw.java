@@ -5,6 +5,8 @@ import java.io.File;
 import mapwriter.config.Config;
 import mapwriter.config.ConfigurationHandler;
 import mapwriter.config.WorldConfig;
+import mapwriter.fac.FactionInput;
+import mapwriter.util.FileSaving;
 import mapwriter.forge.MwForge;
 import mapwriter.forge.MwKeyHandler;
 import mapwriter.gui.MwGui;
@@ -33,15 +35,15 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.chunk.Chunk;
 
-public class Mw
-{
+public class Mw {
+	public FactionInput facInput = new FactionInput();
+	public FileSaving facSaving = new FileSaving();
+
 	public Minecraft mc = null;
 
 	// directories
-	private final File configDir;
-	private final File saveDir;
-	public File worldDir = null;
-	public File imageDir = null;
+	private final File configDir, saveDir;
+	public File worldDir = null, imageDir = null;
 
 	// flags and counters
 	public boolean ready = false;
@@ -75,14 +77,10 @@ public class Mw
 
 	private static Mw instance;
 
-	public static Mw getInstance()
-	{
-		if (instance == null)
-		{
-			synchronized (WorldConfig.class)
-			{
-				if (instance == null)
-				{
+	public static Mw getInstance() {
+		if (instance == null) {
+			synchronized(WorldConfig.class) {
+				if (instance == null) {
 					instance = new Mw();
 				}
 			}
@@ -91,8 +89,7 @@ public class Mw
 		return instance;
 	}
 
-	private Mw()
-	{
+	private Mw() {
 		// client only initialization
 		this.mc = Minecraft.getMinecraft();
 
@@ -107,14 +104,11 @@ public class Mw
 		ConfigurationHandler.loadConfig();
 	}
 
-	public void setTextureSize()
-	{
-		if (Config.configTextureSize != this.textureSize)
-		{
+	public void setTextureSize() {
+		if (Config.configTextureSize != this.textureSize) {
 			int maxTextureSize = Render.getMaxTextureSize();
 			int textureSize = 1024;
-			while ((textureSize <= maxTextureSize) && (textureSize <= Config.configTextureSize))
-			{
+			while ((textureSize <= maxTextureSize) && (textureSize <= Config.configTextureSize)) {
 				textureSize *= 2;
 			}
 			textureSize /= 2;
@@ -124,11 +118,8 @@ public class Mw
 			Logging.log("setting map texture size to = %d", textureSize);
 
 			this.textureSize = textureSize;
-			if (this.ready)
-			{
-				// if we are already up and running need to close and
-				// reinitialize the map texture and
-				// region manager.
+			if (this.ready) {
+				// if we are already up and running need to close and reinitialize the map texture and region manager.
 				this.reloadMapTexture();
 			}
 		}
@@ -136,8 +127,7 @@ public class Mw
 
 	// update the saved player position and orientation
 	// called every tick
-	public void updatePlayer()
-	{
+	public void updatePlayer() {
 		// get player pos
 		this.playerX = this.mc.thePlayer.posX;
 		this.playerY = this.mc.thePlayer.posY;
@@ -145,15 +135,13 @@ public class Mw
 		this.playerXInt = (int) Math.floor(this.playerX);
 		this.playerYInt = (int) Math.floor(this.playerY);
 		this.playerZInt = (int) Math.floor(this.playerZ);
-		
-		if (this.mc.theWorld != null)
-		{
-			if (!this.mc.theWorld.getChunkFromBlockCoords(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty())
-			{
+
+		if (this.mc.theWorld != null) {
+			if (!this.mc.theWorld.getChunkFromBlockCoords(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty()) {
 				this.playerBiome = this.mc.theWorld.getBiomeGenForCoords(new BlockPos(this.playerX, 0, this.playerZ)).biomeName;
 			}
 		}
-		
+
 		// rotationYaw of 0 points due north, we want it to point due east
 		// instead
 		// so add pi/2 radians (90 degrees)
@@ -162,119 +150,88 @@ public class Mw
 
 		// set by onWorldLoad
 		this.playerDimension = this.mc.theWorld.provider.getDimensionId();
-		if (this.miniMap.view.getDimension() != this.playerDimension)
-		{
+		if (this.miniMap.view.getDimension() != this.playerDimension) {
 			WorldConfig.getInstance().addDimension(this.playerDimension);
 			this.miniMap.view.setDimension(this.playerDimension);
 		}
 	}
 
-	public void toggleMarkerMode()
-	{
+	public void toggleMarkerMode() {
 		this.markerManager.nextGroup();
 		this.markerManager.update();
-		this.mc.thePlayer.addChatMessage(new ChatComponentText("group " + this.markerManager.getVisibleGroupName() + " selected"));
+		this.mc.thePlayer.addChatMessage(new ChatComponentText("group "
+				+ this.markerManager.getVisibleGroupName() + " selected"));
 	}
 
 	// cheap and lazy way to teleport...
-	public void teleportTo(int x, int y, int z)
-	{
-		if (Config.teleportEnabled)
-		{
+	public void teleportTo(int x, int y, int z) {
+		if (Config.teleportEnabled) {
 			this.mc.thePlayer.sendChatMessage(String.format("/%s %d %d %d", Config.teleportCommand, x, y, z));
-		}
-		else
-		{
+		} else {
 			Utils.printBoth(I18n.format("mw.msg.tpdisabled"));
 		}
 	}
 
-	public void warpTo(String name)
-	{
-		if (Config.teleportEnabled)
-		{
+	public void warpTo(String name) {
+		if (Config.teleportEnabled) {
 			// MwUtil.printBoth(String.format("warping to %s", name));
-			this.mc.thePlayer.sendChatMessage(String.format("/warp %s", name));
-		}
-		else
-		{
+			this.mc.thePlayer.sendChatMessage("/warp " + name);
+		} else {
 			Utils.printBoth(I18n.format("mw.msg.tpdisabled"));
 		}
 	}
 
-	public void teleportToMapPos(MapView mapView, int x, int y, int z)
-	{
-		if (!Config.teleportCommand.equals("warp"))
-		{
+	public void teleportToMapPos(MapView mapView, int x, int y, int z) {
+		if (!Config.teleportCommand.equals("warp")) {
 			double scale = mapView.getDimensionScaling(this.playerDimension);
 			this.teleportTo((int) (x / scale), y, (int) (z / scale));
-		}
-		else
-		{
+		} else {
 			Utils.printBoth(I18n.format("mw.msg.warp.error"));
 		}
 	}
 
-	public void teleportToMarker(Marker marker)
-	{
-		if (Config.teleportCommand.equals("warp"))
-		{
+	public void teleportToMarker(Marker marker) {
+		if (Config.teleportCommand.equals("warp")) {
 			this.warpTo(marker.name);
-		}
-		else if (marker.dimension == this.playerDimension)
-		{
+		} else if (marker.dimension == this.playerDimension) {
 			this.teleportTo(marker.x, marker.y, marker.z);
-		}
-		else
-		{
+		} else {
 			Utils.printBoth(I18n.format("mw.msg.tp.dimError"));
 		}
 	}
 
-	public void loadBlockColourOverrides(BlockColours bc)
-	{
+	public void loadBlockColourOverrides(BlockColours bc) {
 		File f = new File(this.configDir, Reference.blockColourOverridesFileName);
-		if (f.isFile())
-		{
+		if (f.isFile()) {
 			Logging.logInfo("loading block colour overrides file %s", f);
 			bc.loadFromFile(f);
-		}
-		else
-		{
+		} else {
 			Logging.logInfo("recreating block colour overrides file %s", f);
 			BlockColours.writeOverridesFile(f);
-			if (f.isFile())
-			{
+			if (f.isFile()) {
 				bc.loadFromFile(f);
-			}
-			else
-			{
+			} else {
 				Logging.logError("could not load block colour overrides from file %s", f);
 			}
 		}
 	}
 
-	public void saveBlockColours(BlockColours bc)
-	{
+	public void saveBlockColours(BlockColours bc) {
 		File f = new File(this.configDir, Reference.blockColourSaveFileName);
 		Logging.logInfo("saving block colours to '%s'", f);
 		bc.saveToFile(f);
 	}
 
-	public void reloadBlockColours()
-	{
+	public void reloadBlockColours() {
 		BlockColours bc = new BlockColours();
-		File f = new File(this.configDir, Reference.blockColourSaveFileName);		
-		
-		if (Config.useSavedBlockColours && f.isFile() && bc.CheckFileVersion(f))
-		{
+		File f = new File(this.configDir, Reference.blockColourSaveFileName);
+
+		if (Config.useSavedBlockColours && f.isFile() && bc.CheckFileVersion(f)) {
 			// load block colours from file
 			Logging.logInfo("loading block colours from %s", f);
 			bc.loadFromFile(f);
 			this.loadBlockColourOverrides(bc);
-		}
-		else
-		{
+		} else {
 			// generate block colours from current texture pack
 			Logging.logInfo("generating block colours");
 			BlockColourGen.genBlockColours(bc);
@@ -284,16 +241,14 @@ public class Mw
 		}
 		this.blockColours = bc;
 	}
-	
-	public void reloadMapTexture()
-	{
+
+	public void reloadMapTexture() {
 		this.executor.addTask(new CloseRegionManagerTask(this.regionManager));
 		this.executor.close();
 		MapTexture oldMapTexture = this.mapTexture;
 		MapTexture newMapTexture = new MapTexture(this.textureSize, Config.linearTextureScaling);
 		this.mapTexture = newMapTexture;
-		if (oldMapTexture != null)
-		{
+		if (oldMapTexture != null) {
 			oldMapTexture.close();
 		}
 		this.executor = new BackgroundExecutor();
@@ -302,14 +257,12 @@ public class Mw
 		UndergroundTexture oldTexture = this.undergroundMapTexture;
 		UndergroundTexture newTexture = new UndergroundTexture(this, this.textureSize, Config.linearTextureScaling);
 		this.undergroundMapTexture = newTexture;
-		if (oldTexture != null)
-		{
+		if (oldTexture != null) {
 			this.undergroundMapTexture.close();
 		}
 	}
 
-	public void toggleUndergroundMode()
-	{
+	public void toggleUndergroundMode() {
 		Config.undergroundMode = !Config.undergroundMode;
 		this.miniMap.view.setUndergroundMode(Config.undergroundMode);
 	}
@@ -318,16 +271,10 @@ public class Mw
 	// Initialization and Cleanup
 	// //////////////////////////////
 
-	public void load()
-	{
-
-		if (this.ready)
-		{
-			return;
-		}
-
-		if ((this.mc.theWorld == null) || (this.mc.thePlayer == null))
-		{
+	public void load() {
+		if (this.ready) return;
+		
+		if ((this.mc.theWorld == null) || (this.mc.thePlayer == null)) {
 			Logging.log("Mw.load: world or player is null, cannot load yet");
 			return;
 		}
@@ -336,36 +283,31 @@ public class Mw
 
 		// get world and image directories
 		File saveDir = this.saveDir;
-		if (Config.saveDirOverride.length() > 0)
-		{
+		if (Config.saveDirOverride.length() > 0) {
 			File d = new File(Config.saveDirOverride);
-			if (d.isDirectory())
-			{
+			if (d.isDirectory()) {
 				saveDir = d;
-			}
-			else
-			{
-				Logging.log("error: no such directory %s", Config.saveDirOverride);
+			} else {
+				Logging.log("error: no such directory %s",Config.saveDirOverride);
 			}
 		}
 
-		if (!this.mc.isSingleplayer())
-		{
+		if (!this.mc.isSingleplayer()) {
 			this.worldDir = new File(new File(saveDir, "mapwriter_mp_worlds"), Utils.getWorldName());
-		}
-		else
-		{
+		} else {
 			this.worldDir = new File(new File(saveDir, "mapwriter_sp_worlds"), Utils.getWorldName());
 		}
 
+		// Load Factions
+		this.facSaving.load();
+
 		// create directories
 		this.imageDir = new File(this.worldDir, "images");
-		if (!this.imageDir.exists())
-		{
+		if (!this.imageDir.exists()) {
 			this.imageDir.mkdirs();
 		}
-		if (!this.imageDir.isDirectory())
-		{
+		
+		if (!this.imageDir.isDirectory()) {
 			Logging.log("Mapwriter: ERROR: could not create images directory '%s'", this.imageDir.getPath());
 		}
 
@@ -395,21 +337,17 @@ public class Mw
 		this.chunkManager = new ChunkManager(this);
 
 		this.ready = true;
-
-		// if (!zoomLevelsExist) {
-		// printBoth("recreating zoom levels");
-		// this.regionManager.recreateAllZoomLevels();
-		// }
 	}
 
-	public void close()
-	{
+	public void close() {
 
 		Logging.log("Mw.close: closing...");
 
-		if (this.ready)
-		{
+		if (this.ready) {
 			this.ready = false;
+
+			// Save Factions
+			this.facSaving.saveFactions();
 
 			this.chunkManager.close();
 			this.chunkManager = null;
@@ -420,8 +358,7 @@ public class Mw
 			this.regionManager = null;
 
 			Logging.log("waiting for %d tasks to finish...", this.executor.tasksRemaining());
-			if (this.executor.close())
-			{
+			if (this.executor.close()) {
 				Logging.log("error: timeout waiting for tasks to finish");
 			}
 			Logging.log("done");
@@ -452,23 +389,19 @@ public class Mw
 	// Event handlers
 	// //////////////////////////////
 
-	public void onTick()
-	{
+	public void onTick() {
 		this.load();
-		if (this.ready && (this.mc.thePlayer != null))
-		{
+		if (this.ready && (this.mc.thePlayer != null)) {
 
 			this.setTextureSize();
 
 			this.updatePlayer();
 
-			if (Config.undergroundMode && ((this.tickCounter % 30) == 0))
-			{
+			if (Config.undergroundMode && ((this.tickCounter % 30) == 0)) {
 				this.undergroundMapTexture.update();
 			}
 
-			if (!(this.mc.currentScreen instanceof MwGui))
-			{
+			if (!(this.mc.currentScreen instanceof MwGui)) {
 				// if in game (no gui screen) center the minimap on the player
 				// and render it.
 				this.miniMap.view.setViewCentreScaled(this.playerX, this.playerZ, this.playerDimension);
@@ -477,8 +410,7 @@ public class Mw
 
 			// process background tasks
 			int maxTasks = 50;
-			while (!this.executor.processTaskQueue() && (maxTasks > 0))
-			{
+			while (!this.executor.processTaskQueue() && (maxTasks > 0)) {
 				maxTasks--;
 			}
 
@@ -487,12 +419,6 @@ public class Mw
 			// update GL texture of mapTexture if updated
 			this.mapTexture.processTextureUpdates();
 
-			// let the renderEngine know we have changed the bound texture.
-			// this.mc.renderEngine.resetBoundTexture();
-
-			// if (this.tickCounter % 100 == 0) {
-			// MwUtil.log("tick %d", this.tickCounter);
-			// }
 			this.playerTrail.onTick();
 
 			this.tickCounter++;
@@ -500,17 +426,12 @@ public class Mw
 	}
 
 	// add chunk to the set of loaded chunks
-	public void onChunkLoad(Chunk chunk)
-	{
+	public void onChunkLoad(Chunk chunk) {
 		this.load();
-		if ((chunk != null) && (chunk.getWorld() instanceof net.minecraft.client.multiplayer.WorldClient))
-		{
-			if (this.ready)
-			{
+		if ((chunk != null) && (chunk.getWorld() instanceof net.minecraft.client.multiplayer.WorldClient)) {
+			if (this.ready) {
 				this.chunkManager.addChunk(chunk);
-			}
-			else
-			{
+			} else {
 				Logging.logInfo("missed chunk (%d, %d)", chunk.xPosition, chunk.zPosition);
 			}
 		}
@@ -518,24 +439,19 @@ public class Mw
 
 	// remove chunk from the set of loaded chunks.
 	// convert to mwchunk and write chunk to region file if in multiplayer.
-	public void onChunkUnload(Chunk chunk)
-	{
-		if (this.ready && (chunk != null) && (chunk.getWorld() instanceof net.minecraft.client.multiplayer.WorldClient))
-		{
+	public void onChunkUnload(Chunk chunk) {
+		if (this.ready && (chunk != null) && (chunk.getWorld() instanceof net.minecraft.client.multiplayer.WorldClient)) {
 			this.chunkManager.removeChunk(chunk);
 		}
 	}
 
 	// from onTick when mc.currentScreen is an instance of GuiGameOver
 	// it's the only option to detect death client side
-	public void onPlayerDeath(EntityPlayerMP player)
-	{
-		if (this.ready && (Config.maxDeathMarkers > 0))
-		{
+	public void onPlayerDeath(EntityPlayerMP player) {
+		if (this.ready && (Config.maxDeathMarkers > 0)) {
 			this.updatePlayer();
 			int deleteCount = (this.markerManager.countMarkersInGroup("playerDeaths") - Config.maxDeathMarkers) + 1;
-			for (int i = 0; i < deleteCount; i++)
-			{
+			for (int i = 0; i < deleteCount; i++) {
 				// delete the first marker found in the group "playerDeaths".
 				// as new markers are only ever appended to the marker list this
 				// will delete the
@@ -549,71 +465,50 @@ public class Mw
 		}
 	}
 
-	public void onKeyDown(KeyBinding kb)
-	{
+	public void onKeyDown(KeyBinding kb) {
 		// make sure not in GUI element (e.g. chat box)
-		if ((this.mc.currentScreen == null) && (this.ready))
-		{
+		if ((this.mc.currentScreen == null) && (this.ready)) {
 			// Mw.log("client tick: %s key pressed", kb.keyDescription);
 
-			if (kb == MwKeyHandler.keyMapMode)
-			{
+			if (kb == MwKeyHandler.keyMapMode) {
 				// map mode toggle
 				this.miniMap.nextOverlayMode(1);
-
-			}
-			else if (kb == MwKeyHandler.keyMapGui)
-			{
+			} else if (kb == MwKeyHandler.keyMapGui) {
 				// open map gui
 				this.mc.displayGuiScreen(new MwGui(this));
-
-			}
-			else if (kb == MwKeyHandler.keyNewMarker)
-			{
+			} else if (kb == MwKeyHandler.keyNewMarker) {
 				// open new marker dialog
 				String group = this.markerManager.getVisibleGroupName();
-				if (group.equals("none"))
-				{
-					group = "group";
+				if (group.equals("none")) group = "group";
+				
+				if (Config.newMarkerDialog) {
+					this.mc.displayGuiScreen(new MwGuiMarkerDialogNew(null,
+							this.markerManager, "", group, this.playerXInt,
+							this.playerYInt, this.playerZInt,
+							this.playerDimension));
+				} else {
+					this.mc.displayGuiScreen(new MwGuiMarkerDialog(null,
+							this.markerManager, "", group, this.playerXInt,
+							this.playerYInt, this.playerZInt,
+							this.playerDimension));
 				}
-				if (Config.newMarkerDialog)
-				{
-					this.mc.displayGuiScreen(new MwGuiMarkerDialogNew(null, this.markerManager, "", group, this.playerXInt, this.playerYInt, this.playerZInt, this.playerDimension));
-				}
-				else
-				{
-					this.mc.displayGuiScreen(new MwGuiMarkerDialog(null, this.markerManager, "", group, this.playerXInt, this.playerYInt, this.playerZInt, this.playerDimension));
-				}
-			}
-			else if (kb == MwKeyHandler.keyNextGroup)
-			{
+			} else if (kb == MwKeyHandler.keyNextGroup) {
 				// toggle marker mode
 				this.markerManager.nextGroup();
 				this.markerManager.update();
 				this.mc.thePlayer.addChatMessage(new ChatComponentText("group " + this.markerManager.getVisibleGroupName() + " selected"));
 
-			}
-			else if (kb == MwKeyHandler.keyTeleport)
-			{
+			} else if (kb == MwKeyHandler.keyTeleport) {
 				// set or remove marker
 				Marker marker = this.markerManager.getNearestMarkerInDirection(this.playerXInt, this.playerZInt, this.playerHeading);
-				if (marker != null)
-				{
-					this.teleportToMarker(marker);
-				}
-			}
-			else if (kb == MwKeyHandler.keyZoomIn)
-			{
+				if (marker != null) this.teleportToMarker(marker);
+			} else if (kb == MwKeyHandler.keyZoomIn) {
 				// zoom in
 				this.miniMap.view.adjustZoomLevel(-1);
-			}
-			else if (kb == MwKeyHandler.keyZoomOut)
-			{
+			} else if (kb == MwKeyHandler.keyZoomOut) {
 				// zoom out
 				this.miniMap.view.adjustZoomLevel(1);
-			}
-			else if (kb == MwKeyHandler.keyUndergroundMode)
-			{
+			} else if (kb == MwKeyHandler.keyUndergroundMode) {
 				this.toggleUndergroundMode();
 			}
 		}

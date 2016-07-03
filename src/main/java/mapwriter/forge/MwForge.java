@@ -1,5 +1,7 @@
 package mapwriter.forge;
 
+import java.io.File;
+
 import mapwriter.Mw;
 import mapwriter.util.Reference;
 import net.minecraft.client.Minecraft;
@@ -17,16 +19,15 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Reference.MOD_ID,
-name = Reference.MOD_NAME,
-version = Reference.VERSION,
-guiFactory = Reference.MOD_GUIFACTORY_CLASS,
-clientSideOnly = true,
-updateJSON = Reference.ForgeVersionURL,
-acceptedMinecraftVersions="@ACCEPTED_MC_VERSION@")
-public class MwForge
-{
-
+@Mod(
+	modid 						= Reference.MOD_ID, 
+	name 						= Reference.MOD_NAME, 
+	version 					= Reference.VERSION, 
+	guiFactory 					= Reference.MOD_GUIFACTORY_CLASS, 
+	clientSideOnly 				= true, 
+	updateJSON 					= Reference.ForgeVersionURL, 
+	acceptedMinecraftVersions 	= "1.8")
+public class MwForge {
 	@Instance(Reference.MOD_ID)
 	public static MwForge instance;
 
@@ -36,35 +37,27 @@ public class MwForge
 	public static Logger logger = LogManager.getLogger(Reference.MOD_ID);
 
 	@EventHandler
-	public void preInit(FMLPreInitializationEvent event)
-	{
+	public void preInit(FMLPreInitializationEvent event) {
 		FMLCommonHandler.instance().bus().register(this);
-		proxy.preInit(event.getSuggestedConfigurationFile());
+		proxy.preInit(event.getSuggestedConfigurationFile());//new File(event.getModConfigurationDirectory(), Reference.worldDirConfigName));
 	}
 
 	@EventHandler
-	public void load(FMLInitializationEvent event)
-	{
+	public void load(FMLInitializationEvent event) {
 		proxy.load();
 	}
 
 	@EventHandler
-	public void postInit(FMLPostInitializationEvent event)
-	{
+	public void postInit(FMLPostInitializationEvent event) {
 		proxy.postInit();
 	}
 
 	@SubscribeEvent
-	public void onTick(TickEvent.ClientTickEvent event)
-	{
-		if (event.phase == TickEvent.Phase.START)
-		{
-			// run the cleanup code when Mw is loaded and the player becomes
-			// null.
-			// a bit hacky, but simpler than checking if the connection has
-			// closed.
-			if ((Mw.getInstance().ready) && (Minecraft.getMinecraft().thePlayer == null))
-			{
+	public void onTick(TickEvent.ClientTickEvent event) {
+		if (event.phase == TickEvent.Phase.START) {
+			// run the cleanup code when Mw is loaded and the player becomes null.
+			// a bit hacky, but simpler than checking if the connection has closed.
+			if ((Mw.getInstance().ready) && (Minecraft.getMinecraft().thePlayer == null)) {
 				Mw.getInstance().close();
 			}
 		}

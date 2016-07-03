@@ -1,7 +1,7 @@
 mapwriter
 =========
 
-MapWriter: A minimap mod for Minecraft
+MapWriter: A minimap mod for Minecraft adjusted for Factions
 
 
 Instructions for development:
@@ -34,3 +34,4 @@ Acknowledgements:
 * taelnia for extrautils compatibility patch.
 * LoneStar144 for minimap border and arrow textures.
 * jk-5 for updating the mod to be compatible with Minecraft 1.7.
+* ITS_ITS ITS_ITS ITS_ITS
