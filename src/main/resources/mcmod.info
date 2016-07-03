@@ -1,0 +1,16 @@
+[
+{
+  "modid": "MapWriter",
+  "name": "MapWriter",
+  "description": "An open source mini map mod w/ Factions Support!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "http://www.minecraftforum.net/topic/2523556/",
+  "updateUrl": "http://www.curse.com/mc-mods/Minecraft/231387-mapwriter-2",
+  "authorList": ["mapwriter"],
+  "credits": "chrixian, ProfMobius, taelnia, jk-5, Vectron, Its_its",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
