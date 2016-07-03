@@ -21,6 +21,3 @@ build
 eclipse
 run
 /Run.bat
-/mapwriter_Client.launch
-/mapwriter_Server.launch
-/README.md
