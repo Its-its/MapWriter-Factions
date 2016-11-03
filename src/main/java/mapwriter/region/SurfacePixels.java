@@ -1,13 +1,12 @@
 package mapwriter.region;
 
+import mapwriter.util.Logging;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-
-import javax.imageio.ImageIO;
-
-import mapwriter.util.Logging;
 
 public class SurfacePixels {
 	protected Region region;
@@ -136,11 +135,16 @@ public class SurfacePixels {
 
 	public static int[] loadImage(File filename, int w, int h) {
 		BufferedImage img = null;
-		try {
-			img = ImageIO.read(filename);
-		} catch (IOException e) {
-			img = null;
+
+		if (filename.exists()) {
+			try {
+				img = ImageIO.read(filename);
+			} catch (IOException e) {
+				System.out.println(e);
+				img = null;
+			}
 		}
+
 		int[] pixels = null;
 		if (img != null) {
 			if ((img.getWidth() == w) && (img.getHeight() == h)) {
