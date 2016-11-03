@@ -1,10 +1,5 @@
 package mapwriter.map;
 
-import static org.lwjgl.opengl.ARBDepthClamp.GL_DEPTH_CLAMP;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import mapwriter.config.Config;
 import mapwriter.config.WorldConfig;
 import mapwriter.map.mapmode.MapMode;
@@ -19,11 +14,14 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraftforge.common.config.Configuration;
-
 import org.lwjgl.opengl.GL11;
 
-public class MarkerManager {
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.lwjgl.opengl.ARBDepthClamp.GL_DEPTH_CLAMP;
+
+public class MarkerManager {
 	public List<Marker> markerList = new ArrayList<Marker>();
 	public List<String> groupList = new ArrayList<String>();
 
@@ -39,20 +37,39 @@ public class MarkerManager {
 		this.markerList.clear();
 
 		if (config.hasCategory(category)) {
-			int markerCount = config.get(category, "markerCount", 0).getInt();
 			this.visibleGroupName = config.get(category, "visibleGroup", "").getString();
+			String worldName = WorldConfig.getInstance().worldName;
 
-			if (markerCount > 0) {
-				for (int i = 0; i < markerCount; i++) {
-					String key = "marker" + i;
-					String value = config.get(category, key, "").getString();
-					Marker marker = this.stringToMarker(value);
-					if (marker != null) {
-						this.addMarker(marker);
-					} else {
-						Logging.log("error: could not load " + key + " from config file");
+			// New loading.
+			if (config.getCategory(category).containsKey(worldName) || config.get(category, "markerCount", 0).getInt() == 0) {
+				if (config.getCategory(category).containsKey(worldName)) {
+					String[] markers = config.get(category, worldName, new String[0]).getStringList();
+					for (int i = 0; i < markers.length; i++) {
+						Marker marker = this.stringToMarker(markers[i]);
+						if (marker != null) {
+							this.addMarker(marker);
+						}
 					}
 				}
+			}
+			// Old loading
+			else {
+				int markerCount = config.get(category, "markerCount", 0).getInt();
+
+				if (markerCount > 0) {
+					for (int i = 0; i < markerCount; i++) {
+						String key = "marker" + i;
+						String value = config.get(category, key, "").getString();
+						Marker marker = this.stringToMarker(value);
+						if (marker != null) {
+							this.addMarker(marker);
+						} else {
+							Logging.log("error: could not load " + key + " from config file");
+						}
+					}
+				}
+
+				config.removeCategory(config.getCategory(category));
 			}
 		}
 
@@ -60,17 +77,18 @@ public class MarkerManager {
 	}
 
 	public void save(Configuration config, String category) {
-		config.removeCategory(config.getCategory(category));
-		config.get(category, "markerCount", 0).set(this.markerList.size());
+		String worldName = WorldConfig.getInstance().worldName;
 		config.get(category, "visibleGroup", "").set(this.visibleGroupName);
 
+		String[] markers = new String[this.markerList.size()];
 		int i = 0;
 		for (Marker marker : this.markerList) {
-			String key = "marker" + i;
-			String value = this.markerToString(marker);
-			config.get(category, key, "").set(value);
+			markers[i] = this.markerToString(marker);
+			System.out.println(markers[i]);
 			i++;
 		}
+
+		config.get(category, worldName, new String[0]).set(markers);
 
 		if (config.hasChanged()) {
 			config.save();
@@ -270,6 +288,8 @@ public class MarkerManager {
 	}
 
 	public void drawMarkers(MapMode mapMode, MapView mapView) {
+		if (Minecraft.getMinecraft().getRenderManager().livingPlayer == null) return;
+
 		for (Marker marker : this.visibleMarkerList) {
 			// only draw markers that were set in the current dimension
 			if (mapView.getDimension() == marker.dimension) {

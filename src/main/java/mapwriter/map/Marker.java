@@ -1,12 +1,15 @@
 package mapwriter.map;
 
-import java.awt.Point;
-
 import mapwriter.map.mapmode.MapMode;
 import mapwriter.util.Render;
 import mapwriter.util.Utils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
+
+import java.awt.*;
 
 public class Marker {
 	public final String name;
@@ -45,6 +48,36 @@ public class Marker {
 		double scale = mapView.getDimensionScaling(this.dimension);
 		Point.Double p = mapMode.getClampedScreenXY(mapView, (this.x + 0.5D) * scale, (this.z + 0.5D) * scale);
 		this.screenPos.setLocation(p.x + mapMode.xTranslation, p.y + mapMode.yTranslation);
+		
+		//
+		
+		RenderManager manager = Minecraft.getMinecraft().getRenderManager();
+		
+		boolean labelHidden = false;
+		int angle = 5;
+		
+		Vec3 waypointVec = new Vec3(this.x, this.y, this.z);
+		
+		double yaw = Math.atan2(manager.viewerPosZ - waypointVec.zCoord, manager.viewerPosX - waypointVec.xCoord);
+		double degrees = Math.toDegrees(yaw) + 90.0D;
+		double playerYaw = manager.livingPlayer.getRotationYawHead() % 360.0F;
+		
+		if (degrees < 0.0D) degrees = 360.0D + degrees;
+		if (playerYaw < 0.0D) playerYaw += 360.0D;
+		
+		playerYaw = Math.toRadians(playerYaw);
+		double playerDegrees = Math.toDegrees(playerYaw);
+		
+		degrees += angle;
+		playerDegrees += angle;
+		
+		labelHidden = Math.abs(degrees + angle - (playerDegrees + angle)) > angle;
+		
+		if(!labelHidden) {
+			//Show label
+		}
+		
+		
 
 		// draw a coloured rectangle centered on the calculated (x, y)
 		double mSize = mapMode.config.markerSize;

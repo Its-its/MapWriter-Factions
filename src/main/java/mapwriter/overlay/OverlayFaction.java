@@ -1,30 +1,19 @@
 package mapwriter.overlay;
 
-import java.awt.Point;
-import java.awt.geom.Point2D.Double;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.lwjgl.input.Keyboard;
-
 import mapwriter.Mw;
-import mapwriter.util.Render;
 import mapwriter.api.IMwChunkOverlay;
 import mapwriter.api.IMwDataProvider;
 import mapwriter.fac.Faction;
-import mapwriter.fac.FactionInput;
 import mapwriter.fac.Faction.Claim;
-import mapwriter.forge.MwForge;
 import mapwriter.gui.MwGui;
 import mapwriter.gui.MwGuiFactionDialog;
-import mapwriter.gui.MwGuiMarkerDialogNew;
 import mapwriter.map.MapView;
 import mapwriter.map.mapmode.MapMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.MathHelper;
+import org.lwjgl.input.Keyboard;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class OverlayFaction implements IMwDataProvider {
 	int chunkX = 0;
@@ -32,6 +21,12 @@ public class OverlayFaction implements IMwDataProvider {
 	
 	@Override
 	public List<IMwChunkOverlay> getChunksOverlay(int dim, double centerX, double centerZ, double minX, double minZ, double maxX, double maxZ) {
+		List<IMwChunkOverlay> chunks = new LinkedList<IMwChunkOverlay>();
+
+		// If Thread locked; return.
+		if (Mw.getInstance().facInput.locked) return chunks;
+
+		// How many more chunks to load outside the screen region.
 		int padding = 7;
 
 		int minCX = ((int)Math.floor(minX) >> 4) - padding;
@@ -39,10 +34,6 @@ public class OverlayFaction implements IMwDataProvider {
 		int minCZ = ((int)Math.floor(minZ) >> 4) - padding;
 		int maxCZ = ((int)Math.floor(maxZ) >> 4) + padding;
 
-		List<IMwChunkOverlay> chunks = new LinkedList<IMwChunkOverlay>();
-
-		int maxClaims = (maxCX - minCX) + (maxCZ - minCZ);
-		
 		for (Faction fac : Mw.getInstance().facInput.factions.values()) {
 			for (int i = 0; i < fac.claimAmount(); i++) {
 				Claim claim = fac.getClaims().get(i);

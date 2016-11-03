@@ -1,36 +1,27 @@
 package mapwriter.fac;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.commons.lang3.ArrayUtils;
-
+import mapwriter.Mw;
 import mapwriter.fac.Faction.Claim;
 import mapwriter.util.ColorCodes;
 import mapwriter.util.FactionRegex;
 import mapwriter.util.HashMapXY;
+import mapwriter.util.Logging;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
-/*
- * Faction Display stuff.
- * 
- * TODO
- *   - Clean up this file
- *   - Fix Chunk Updates to work properly.
- *   - Continue cleaning up code.
- *   - Optimize
- */
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class FactionInput {
 	private FactionRegex fr = new FactionRegex();
-	
-	// Stores Chat Faction Map: Top to Bottom
+
+	public boolean locked = false;
+	public boolean enabled = true;
+	public boolean showMap = true;
+
+	// Stores Chat Faction Map - Top to Bottom
 	public String[] factionMap = new String[0];
 	
 	// Stores Ascii code and Faction Name with its Color code Prepending it.
@@ -47,8 +38,6 @@ public class FactionInput {
 	
 	//Changed to TreeMap for String.CASE_INSENSITIVE_ORDER
 	public Map<String, Faction> factions = new TreeMap<String, Faction>(String.CASE_INSENSITIVE_ORDER);
-	
-	public boolean showMap = true;
 	
 	public void removeFaction(Faction faction) {
 		for(Claim claim : faction.getClaims()) {
@@ -68,7 +57,7 @@ public class FactionInput {
 		if (newFaction != null) {
 			Faction oldFaction = this.getFaction(oldName);
 			
-			System.out.println("Transfering claims from " + oldName + " -> " + newName);
+			System.out.println("Transferring claims from " + oldName + " -> " + newName);
 			
 			//Add claims to new faction from old faction.
 			
@@ -100,7 +89,7 @@ public class FactionInput {
 		
 		//faction equals null, remove any claim at the x, z
 		if (faction == null) {
-			if(remFac == null) return;
+			if (remFac == null) return;
 			
 			remFac.remClaim(x, z);
 			this.setClaim(null, x, z);
@@ -111,11 +100,15 @@ public class FactionInput {
 			this.factions.put(faction.getName(), faction);
 		}
 		
-		//If Claim is there, remove it from faction.
+		// If Claim is there, remove it from other faction.
 		if(remFac != null) remFac.remClaim(x, z);
 
 		this.setFactionClaim(faction.getName(), x, z);
-		this.getFaction(faction.getName()).updateColor(faction.getColor());
+
+		Faction fac = this.getFaction(faction.getName());
+
+		// Update color if user hasn't changed it manually.
+		if (!fac.hasCustomColor()) fac.updateColor(faction.getColor());
 	}
 	
 	public void setFactionClaim(String name, int x, int z) {
@@ -147,13 +140,15 @@ public class FactionInput {
 		return fac.getClaim(x, z);
 	}
 	
-	protected void unsetMap() {
+	private void unsetMap() {
 		this.pos = 0;
 		this.factionMap = new String[0];
 		this.length = 14;
 	}
 	
 	public boolean isFactionMap(IChatComponent chat) {
+		if (!this.enabled) return false;
+
 		String cText = chat.getFormattedText();
 		String uText = chat.getUnformattedText();
 		
@@ -193,7 +188,7 @@ public class FactionInput {
 		return false;
 	}
 	
-	public void saveFactionMap(String[] factionLegend, String[] coords) {
+	private void saveFactionMap(String[] factionLegend, String[] coords) {
 		if (factionLegend.length >= 2) {
 			// TreeMap: factionNames; Ascii Code, Faction Name
 			
@@ -201,10 +196,10 @@ public class FactionInput {
 			for (int pos = 0; pos < factionLegend.length / 2; pos++) {
 				int facNamePos = (pos * 2);
 				String colorCode = factionLegend[facNamePos].replace("\u00A7r", "").substring(0, 2);
-				String aciiSymbol = StringUtils.stripControlCodes(factionLegend[facNamePos]).replace(":", "");
+				String asciiSymbol = StringUtils.stripControlCodes(factionLegend[facNamePos]).replace(":", "");
 				String factionName = colorCode + StringUtils.stripControlCodes(factionLegend[facNamePos + 1]);
 
-				this.factionNames.put(aciiSymbol, factionName);
+				this.factionNames.put(asciiSymbol, factionName);
 			}
 			
 			String currentLand = this.factionMap[0].split(" ")[2].replace("\u00A7r", "");
@@ -217,9 +212,7 @@ public class FactionInput {
 			int zCurrentChunk = Integer.parseInt(coords[1]);
 			int xCornerChunk = xCurrentChunk - (this.factionMap[1].length() / 2);
 			int zCornerChunk = zCurrentChunk - ((this.factionMap.length / 2) - 1);
-			
-			List<int[]> factionsIn = new LinkedList<int[]>();
-			
+
 			for(int mapY = 1; mapY < this.factionMap.length - 1; mapY++) {
 				String facLine = this.factionMap[mapY];
 				
@@ -230,35 +223,39 @@ public class FactionInput {
 					String charAtXY = String.valueOf(facLine.charAt(mapX));
 					
 					//Continue if compass portion of map
-					if(charAtXY.equals("`")) continue;
+					if (charAtXY.equals("`")) continue;
 					
 					charAtXY = (this.factionNames.keySet().contains(charAtXY) ? this.factionNames.get(charAtXY) : "-");
 					
 					String factionName = StringUtils.stripControlCodes(charAtXY);
 					
-					if(factionName.equals("-") || factionName.equals("Wilderness")) {
+					if (factionName.equals("-") || factionName.equals("Wilderness")) {
 						this.addOrEditFaction(null, chunkX, chunkZ);
 					} else {
 						String colorCode = charAtXY.substring(0, 2).replace("\u00A7", "");
-						this.addOrEditFaction(new Faction(StringUtils.stripControlCodes(charAtXY), ColorCodes.getColor(colorCode)), chunkX, chunkZ);
-						factionsIn.add(new int[] { chunkX, chunkZ });
+						this.addOrEditFaction(new Faction(factionName, ColorCodes.getColor(colorCode)), chunkX, chunkZ);
 					}
 				}
 			}
-			
-			//Best way until I fix the claim.update() fully.
-			for(Faction fac : this.factions.values()) {
-				for(Claim claim : fac.getClaims()) {
-					claim.update();
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					int updates = 0;
+
+					for (String name : Mw.getInstance().facInput.factionNames.values()) {
+						Faction fac = Mw.getInstance().facInput.getFaction(StringUtils.stripControlCodes(name));
+						if (fac != null) {
+							for (Claim claim : fac.getClaims()) {
+								claim.update();
+								updates++;
+							}
+						}
+					}
+
+					Logging.log("Claim updates: " + updates);
 				}
-			}
-			
-			//TODO: Implement this in 2.0 after I fix claim.update()
-			//for (int[] fac : factionsIn) {
-			//	this.getClaim(fac[0], fac[1]).update();
-			//}
-			
-			System.out.println("Claim updates: " + factionsIn.size());
+			}, "Claim Updates").start();
 		}
 	}
 }

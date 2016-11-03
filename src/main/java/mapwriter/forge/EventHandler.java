@@ -9,11 +9,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.GuiOpenEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -115,4 +111,14 @@ public class EventHandler {
 			Config.reloadColours = false;
 		}
 	}
+
+//	TODO: May use. getDepartMessage() == null when switching bungee servers.
+//	@SubscribeEvent
+//	public void onWorldUnloadEvent(WorldEvent.Unload event) {
+//		if (event.world != null) {
+//			System.out.println(event.world + " | " + event.world.provider.getDepartMessage());
+//		} else {
+//			System.out.println(event.getResult());
+//		}
+//	}
 }

@@ -58,10 +58,8 @@ public class ChunkRender {
 		
 		for (int z = 0; z < MwChunk.SIZE; z++) {
 			for (int x = 0; x < MwChunk.SIZE; x++) {
-				// for the nether dimension search for the first non-opaque
-				// block below the ceiling.
-				// cannot use y = chunkMaxY as the nether sometimes spawns
-				// mushrooms above the ceiling height. this fixes the
+				// for the nether dimension search for the first non-opaque block below the ceiling.
+				// cannot use y = chunkMaxY as the nether sometimes spawns mushrooms above the ceiling height. this fixes the
 				// rectangular grey areas (ceiling bedrock) on the nether map.
 				
 				int y;

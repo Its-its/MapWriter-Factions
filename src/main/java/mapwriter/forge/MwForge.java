@@ -1,6 +1,5 @@
 package mapwriter.forge;
 
-import java.io.File;
 
 import mapwriter.Mw;
 import mapwriter.util.Reference;
@@ -15,7 +14,6 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +37,7 @@ public class MwForge {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		FMLCommonHandler.instance().bus().register(this);
-		proxy.preInit(event.getSuggestedConfigurationFile());//new File(event.getModConfigurationDirectory(), Reference.worldDirConfigName));
+		proxy.preInit(event.getSuggestedConfigurationFile());
 	}
 
 	@EventHandler

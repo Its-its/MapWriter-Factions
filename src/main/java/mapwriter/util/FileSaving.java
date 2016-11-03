@@ -1,55 +1,43 @@
 package mapwriter.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
+import com.google.gson.*;
 import mapwriter.Mw;
 import mapwriter.fac.Faction;
-import mapwriter.fac.Faction.Claim;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.io.*;
+import java.util.Collection;
 
 public class FileSaving {
-	public File factionsDir = null;
-	
-	public Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private File factionsDir = null;
+	private boolean savingFactions = false;
+
+	private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	
 	public FileSaving() {}
 	
-	public void load() {
-		this.factionsDir = new File(Mw.getInstance().worldDir, "factions");
+	public void load(File directory) {
+		this.factionsDir = new File(directory, "factions");
 		if (!this.factionsDir.exists()) this.factionsDir.mkdir();
-		else loadFactions();
+		else this.loadFactions();
 	}
 	
 	private void loadFactions() {
-		Mw.getInstance().facInput.facCoords.clear();
-		Mw.getInstance().facInput.factions.clear();
-		
 		new Thread(new LoadThread(), "Factions Loading").start();
 	}
 	
 	public void saveFactions() {
+		this.savingFactions = true;
 		new Thread(new SaveThread(), "Factions Saving").start();
 	}
-	
-	class LoadThread implements Runnable {
+
+	private class LoadThread implements Runnable {
 		@Override
 		public void run() {
+			while (savingFactions) {}
+
 			File[] facsFile = factionsDir.listFiles();
 			if (facsFile == null) return;
+			Mw.getInstance().facInput.locked = true;
 
 			for (File fac : facsFile) {
 				try {
@@ -59,11 +47,11 @@ public class FileSaving {
 
 					String name 	= json.get("Name").getAsString();
 					String color 	= json.get("Color").getAsString();
-					boolean cColor 	= json.has("CustomColor") ? json.get("CustomColor").getAsBoolean() : false;
+					boolean cColor 	= json.has("CustomColor") && json.get("CustomColor").getAsBoolean();
 					String image 	= json.has("Image") ? json.get("Image").getAsString() : "";
 					
 					// A check because I was retarded and used a json object instead of an array.
-					if(json.get("Claims").isJsonObject()) {
+					if (json.get("Claims").isJsonObject()) {
 						int amount 			= json.get("ClaimAmount").getAsInt();
 						JsonObject claim 	= json.get("Claims").getAsJsonObject();
 
@@ -89,30 +77,17 @@ public class FileSaving {
 					claim.update();
 				}
 			}
+
+			Mw.getInstance().facInput.locked = false;
 		}
 	}
 	
-	class SaveThread implements Runnable {
+	private class SaveThread implements Runnable {
 		@Override 
 		public void run() {
-			File config = new File(Mw.getInstance().worldDir, "factions.cfg");
-			JsonObject jConfig = new JsonObject();
+			Collection<Faction> coll = Mw.getInstance().facInput.factions.values();
+			Faction[] factions = coll.toArray(new Faction[coll.size()]);
 
-			jConfig.addProperty("Regex Faction Map", FactionRegex.getRegex("map"));
-			jConfig.addProperty("Regex Faction Name", FactionRegex.getRegex("show"));
-
-			try {
-				if (!config.exists()) config.createNewFile();
-
-				PrintWriter save = new PrintWriter(new FileWriter(config));
-				save.println(gson.toJson(jConfig));
-				save.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			
-			Collection<Faction> factions = new ArrayList<Faction>(Mw.getInstance().facInput.factions.values());
-			
 			for (Faction fac : factions) {
 				try {
 					File facFile = new File(factionsDir, fac.getName() + ".txt");
@@ -145,6 +120,8 @@ public class FileSaving {
 
 			Mw.getInstance().facInput.facCoords.clear();
 			Mw.getInstance().facInput.factions.clear();
+
+			savingFactions = false;
 		}
 	}
 }

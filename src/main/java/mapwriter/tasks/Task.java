@@ -29,7 +29,7 @@ public abstract class Task implements Runnable {
 	}
 
 	public final boolean isDone() {
-		return (this.future != null) ? this.future.isDone() : false;
+		return (this.future != null) && this.future.isDone();
 	}
 
 	public final void printException() {

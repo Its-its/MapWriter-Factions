@@ -1,8 +1,5 @@
 package mapwriter.gui;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import mapwriter.config.Config;
 import mapwriter.config.ConfigurationHandler;
 import mapwriter.util.Reference;
@@ -17,6 +14,9 @@ import net.minecraftforge.fml.client.config.GuiConfigEntries.ButtonEntry;
 import net.minecraftforge.fml.client.config.GuiConfigEntries.IConfigEntry;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.client.config.IConfigElement;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ModGuiConfig extends GuiConfig {
 	public ModGuiConfig(GuiScreen guiScreen) {// new ConfigElement(ConfigurationHandler.configuration.getCategory(Reference.catOptions)).getChildElements(),
@@ -36,7 +36,7 @@ public class ModGuiConfig extends GuiConfig {
 	}
 
 	/**
-	 * Creates a button linking to another screen where all options of the
+	 * Creates a event linking to another screen where all options of the
 	 * category are available
 	 */
 	private static IConfigElement categoryElement(String category, String name, String tooltip_key) {

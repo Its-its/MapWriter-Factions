@@ -22,7 +22,6 @@ public class Region {
 	public SurfacePixels surfacePixels;
 
 	public Region(RegionManager regionManager, int x, int z, int zoomLevel, int dimension) {
-
 		this.regionManager = regionManager;
 
 		this.zoomLevel = Math.min(Math.max(0, zoomLevel), regionManager.maxZoom);

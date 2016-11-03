@@ -5,16 +5,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
-
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-
-/*
- * MwRender contains most of the code for drawing the overlay. This includes: -
- * loading textures from images - saving textures to images - allocating and
- * setting up GL textures - drawing coloured and textured quads (using minecraft
- * Tesselator class)
- */
 
 public class Render {
 	public static double zDepth = 0.0D;
@@ -44,16 +36,36 @@ public class Render {
 		float c1A = (c1 >> 24) & 0xff;
 		float c1R = (c1 >> 16) & 0xff;
 		float c1G = (c1 >> 8) & 0xff;
-		float c1B = (c1 >> 0) & 0xff;
+		float c1B = c1 & 0xff;
 		float c2A = (c2 >> 24) & 0xff;
 		float c2R = (c2 >> 16) & 0xff;
 		float c2G = (c2 >> 8) & 0xff;
-		float c2B = (c2 >> 0) & 0xff;
+		float c2B = c2 & 0xff;
 		int r = (int) ((c1R * c2R) / 255.0f) & 0xff;
 		int g = (int) ((c1G * c2G) / 255.0f) & 0xff;
 		int b = (int) ((c1B * c2B) / 255.0f) & 0xff;
 		int a = (int) ((c1A * c2A) / 255.0f) & 0xff;
 		return (a << 24) | (r << 16) | (g << 8) | b;
+	}
+
+	public static int interpolateColor(int from, int to, float percent) {
+		if (percent == 0.0F) {
+			return from;
+		}
+
+		if (percent == 100.0F) {
+			return to;
+		}
+
+		int r1 = from & 0xFF, g1 = from >> 8 & 0xFF, b1 = from >> 16 & 0xFF, a1 = from >> 24 & 0xFF;
+		int r2 = to & 0xFF, g2 = to >> 8 & 0xFF, b2 = to >> 16 & 0xFF, a2 = to >> 24 & 0xFF;
+
+		int r = (int) (r1 < r2 ? r1 + (r2 - r1) * percent : r2 + (r1 - r2) * percent);
+		int g = (int) (g1 < g2 ? g1 + (g2 - g1) * percent : g2 + (g1 - g2) * percent);
+		int b = (int) (b1 < b2 ? b1 + (b2 - b1) * percent : b2 + (b1 - b2) * percent);
+		int a = (int) (a1 < a2 ? a1 + (a2 - a1) * percent : a2 + (a1 - a2) * percent);
+
+		return r | g << 8 | b << 16 | a << 24;
 	}
 
 	public static int getAverageOfPixelQuad(int[] pixels, int offset, int scanSize) {
@@ -82,7 +94,7 @@ public class Render {
 			double a = (pixel >> 24) & 0xff;
 			double r = (pixel >> 16) & 0xff;
 			double g = (pixel >> 8) & 0xff;
-			double b = (pixel >> 0) & 0xff;
+			double b = pixel & 0xff;
 
 			totalA += a;
 			totalR += (r * a) / 255.0;
@@ -106,7 +118,7 @@ public class Render {
 	public static int adjustPixelBrightness(int colour, int brightness) {
 		int r = ((colour >> 16) & 0xff);
 		int g = ((colour >> 8) & 0xff);
-		int b = ((colour >> 0) & 0xff);
+		int b = (colour & 0xff);
 		r = Math.min(Math.max(0, r + brightness), 0xff);
 		g = Math.min(Math.max(0, g + brightness), 0xff);
 		b = Math.min(Math.max(0, b + brightness), 0xff);
@@ -174,14 +186,15 @@ public class Render {
 	}
 
 	public static void drawArrow(double x, double y, double angle, double length) {
+		Tessellator tessellator = Tessellator.getInstance();
+		WorldRenderer renderer = tessellator.getWorldRenderer();
 		// angle the back corners will be drawn at relative to the pointing
 		// angle
 		double arrowBackAngle = 0.75D * Math.PI;
 		GlStateManager.enableBlend();
 		GlStateManager.disableTexture2D();
 		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		Tessellator tessellator = Tessellator.getInstance();
-		WorldRenderer renderer = tessellator.getWorldRenderer();
+
 		renderer.startDrawing(GL11.GL_TRIANGLE_FAN);
 		renderer.addVertex(x + (length * Math.cos(angle)), y + (length * Math.sin(angle)), zDepth);
 		renderer.addVertex( x + (length * 0.5D * Math.cos(angle - arrowBackAngle)), y + (length * 0.5D * Math.sin(angle - arrowBackAngle)), zDepth);
@@ -189,6 +202,24 @@ public class Render {
 		renderer.addVertex(x + (length * 0.5D * Math.cos(angle + arrowBackAngle)), y + (length * 0.5D * Math.sin(angle + arrowBackAngle)), zDepth);
 		// renderer.finishDrawing();
 		tessellator.draw();
+
+		GlStateManager.enableTexture2D();
+		GlStateManager.disableBlend();
+	}
+
+	public static void drawLine(double x1, double y1, double x2, double y2) {
+		Tessellator tessellator = Tessellator.getInstance();
+		WorldRenderer renderer = tessellator.getWorldRenderer();
+
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture2D();
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+		renderer.startDrawing(GL11.GL_LINES);
+		renderer.addVertex(x1, y1, 0);
+		renderer.addVertex(x2, y2, 0);
+		tessellator.draw();
+
 		GlStateManager.enableTexture2D();
 		GlStateManager.disableBlend();
 	}
@@ -265,6 +296,50 @@ public class Render {
 		}
 		// renderer.finishDrawing();
 		tessellator.draw();
+		GlStateManager.enableTexture2D();
+		GlStateManager.disableBlend();
+	}
+
+	public static void drawRectCircular(double x, double y, double w, double h, double r) {
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture2D();
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+		Tessellator tessellator = Tessellator.getInstance();
+		WorldRenderer renderer = tessellator.getWorldRenderer();
+
+		renderer.startDrawing(GL11.GL_TRIANGLE_FAN);
+
+		double quarter = Math.PI/2;
+		double inc = quarter/circleSteps;
+		double angle = 0;
+
+		// Top right
+		for (double theta = -inc; theta < quarter; theta += inc) {
+			renderer.addVertex(x + w + r + (r * Math.cos(-theta - angle)) + 2, y + r + (r * Math.sin(-theta - angle)), zDepth);
+		}
+
+		// Top left
+		angle += quarter;
+		for (double theta = -inc; theta < quarter; theta += inc) {
+			renderer.addVertex(x + r + (r * Math.cos(-theta - angle)), y + r + (r * Math.sin(-theta - angle)), zDepth);
+		}
+
+		// Bottom left
+		angle += quarter;
+		for (double theta = -inc; theta < quarter; theta += inc) {
+			renderer.addVertex(x + r + (r * Math.cos(-theta - angle)), y + h + r + (r * Math.sin(-theta - angle)), zDepth);
+		}
+
+		// Bottom right
+		angle += quarter;
+		for (double theta = -inc; theta < quarter; theta += inc) {
+			renderer.addVertex(x + w + r + (r * Math.cos(-theta - angle)) + 2, y + h + r + (r * Math.sin(-theta - angle)), zDepth);
+		}
+
+		// Finally draw
+		tessellator.draw();
+
 		GlStateManager.enableTexture2D();
 		GlStateManager.disableBlend();
 	}

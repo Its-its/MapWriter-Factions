@@ -1,18 +1,5 @@
 package mapwriter.util;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import mapwriter.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -21,6 +8,15 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.chunk.Chunk;
+
+import java.io.File;
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class Utils {
 	public static int[] integerListToIntArray(List<Integer> list) {
@@ -133,7 +129,7 @@ public class Utils {
 			if (!Config.portNumberInWorldNameEnabled) {
 				worldName = worldName.substring(0, worldName.indexOf(":"));
 			} else {
-				if (worldName.indexOf(":") == -1) {// standard port is missing.
+				if (!worldName.contains(":")) {// standard port is missing.
 													// Adding it
 					worldName += "_25565";
 				} else {
@@ -148,7 +144,7 @@ public class Utils {
 
 		// if something went wrong make sure the name is not blank
 		// (causes crash on start up due to empty configuration section)
-		if (worldName == "") {
+		if (worldName.isEmpty()) {
 			worldName = "default";
 		}
 		return worldName;
@@ -157,13 +153,10 @@ public class Utils {
 	public static void openWebLink(URI p_175282_1_) {
 		try {
 			Class<?> oclass = Class.forName("java.awt.Desktop");
-			Object object = oclass.getMethod("getDesktop", new Class[0])
-					.invoke((Object) null, new Object[0]);
-			oclass.getMethod("browse", new Class[] { URI.class }).invoke(
-					object, new Object[] { p_175282_1_ });
+			Object object = oclass.getMethod("getDesktop", new Class[0]).invoke((Object) null, new Object[0]);
+			oclass.getMethod("browse", new Class[] { URI.class }).invoke(object, new Object[] { p_175282_1_ });
 		} catch (Throwable throwable) {
-			Logging.logError("Couldn\'t open link %s", throwable
-					.getStackTrace().toString());
+			Logging.logError("Couldn\'t open link %s", throwable.getStackTrace().toString());
 		}
 	}
 
@@ -187,19 +180,20 @@ public class Utils {
 				String s = I18n.format(arr[i]);
 				w1 = fontRendererObj.getStringWidth(s);
 			}
+
 			if ((arr2 != null) && (i < arr2.length)) {
 				String s = I18n.format(arr2[i]);
 				w2 = fontRendererObj.getStringWidth(s);
 				w2 += 65;
 			}
+
 			int wTot = w1 > w2 ? w1 : w2;
 			Width = Width > wTot ? Width : wTot;
 		}
 		return Width;
 	}
 
-	private static int[] colours = new int[] { 0xff0000, 0x00ff00, 0x0000ff,
-			0xffff00, 0xff00ff, 0x00ffff, 0xff8000, 0x8000ff };
+	private static int[] colours = new int[] { 0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8000, 0x8000ff };
 	// static so that current index is shared between all markers
 	public static int colourIndex = 0;
 

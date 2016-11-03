@@ -1,35 +1,30 @@
 package mapwriter.fac;
 
-import java.awt.Point;
+import mapwriter.Mw;
+import mapwriter.api.IMwChunkOverlay;
+import mapwriter.util.Render;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
+
+import java.awt.*;
 import java.awt.geom.Point2D.Double;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
-import mapwriter.Mw;
-import mapwriter.api.IMwChunkOverlay;
-import mapwriter.util.Reference;
-import mapwriter.util.Render;
-
 public class Faction {
-	private List claims = new LinkedList();
+	private List<Claim> claims = new LinkedList<Claim>();
 	private int mColor;
 	private int bColor;
 	private String colorHex;
 	private String factionName;
 	private boolean customColor;
 	private ResourceLocation texture;
-	
-	Faction(String name, String colorHex) {
+
+	public Faction(String name, String colorHex) {
 		this(name, colorHex, false);
 	}
-	
-	Faction(String name, String colorHex, boolean customColor) {
+
+	public Faction(String name, String colorHex, boolean customColor) {
 		this(name, colorHex, customColor, "");
 	}
 	
@@ -102,13 +97,9 @@ public class Faction {
 	public void updateColor(String newColor) {
 		this.updateColor(newColor, "33", "CC");
 	}
-	
-	public List<IMwChunkOverlay> getOverlays() {
-		return (List<IMwChunkOverlay>)this.claims;
-	}
-	
+
 	public List<Claim> getClaims() {
-		return (List<Claim>)this.claims;
+		return this.claims;
 	}
 	
 	public Claim getClaim(int x, int z) {

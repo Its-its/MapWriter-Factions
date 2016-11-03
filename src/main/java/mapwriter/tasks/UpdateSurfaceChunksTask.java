@@ -1,21 +1,21 @@
 package mapwriter.tasks;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import mapwriter.Mw;
 import mapwriter.map.MapTexture;
 import mapwriter.region.MwChunk;
 import mapwriter.region.RegionManager;
 import net.minecraft.world.ChunkCoordIntPair;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class UpdateSurfaceChunksTask extends Task {
 	private MwChunk chunk;
 	private RegionManager regionManager;
 	private MapTexture mapTexture;
 	private AtomicBoolean Running = new AtomicBoolean();
-	private static Map chunksUpdating = new HashMap<Long, UpdateSurfaceChunksTask>();
+	private static Map<Long, UpdateSurfaceChunksTask> chunksUpdating = new HashMap<Long, UpdateSurfaceChunksTask>();
 
 	public UpdateSurfaceChunksTask(Mw mw, MwChunk chunk) {
 		this.mapTexture = mw.mapTexture;
@@ -36,8 +36,7 @@ public class UpdateSurfaceChunksTask extends Task {
 
 	@Override
 	public void onComplete() {
-		Long coords = this.chunk.getCoordIntPair();
-		UpdateSurfaceChunksTask.chunksUpdating.remove(coords);
+		UpdateSurfaceChunksTask.chunksUpdating.remove(this.chunk.getCoordIntPair());
 		this.Running.set(false);
 	}
 
@@ -53,8 +52,8 @@ public class UpdateSurfaceChunksTask extends Task {
 			UpdateSurfaceChunksTask.chunksUpdating.put(coords, this);
 			return false;
 		} else {
-			UpdateSurfaceChunksTask task2 = (UpdateSurfaceChunksTask) UpdateSurfaceChunksTask.chunksUpdating.get(coords);
-			if (task2.Running.get() == false) {
+			UpdateSurfaceChunksTask task2 = UpdateSurfaceChunksTask.chunksUpdating.get(coords);
+			if (!task2.Running.get()) {
 				task2.UpdateChunkData(this.chunk);
 			} else {
 				UpdateSurfaceChunksTask.chunksUpdating.put(coords, this);

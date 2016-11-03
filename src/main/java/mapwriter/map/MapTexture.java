@@ -1,15 +1,14 @@
 package mapwriter.map;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import mapwriter.BackgroundExecutor;
 import mapwriter.region.Region;
 import mapwriter.region.RegionManager;
 import mapwriter.tasks.MapUpdateViewTask;
 import mapwriter.util.Texture;
-
 import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapTexture extends Texture {
 	public int textureRegions;
@@ -117,8 +116,7 @@ public class MapTexture extends Texture {
 
 		int[] pixels = region.getPixels();
 		if (pixels != null) {
-			this.setRGBOpaque(tx, ty, tw, th, pixels,
-					region.getPixelOffset(x, z), Region.SIZE);
+			this.setRGBOpaque(tx, ty, tw, th, pixels, region.getPixelOffset(x, z), Region.SIZE);
 		} else {
 			this.fillRect(tx, ty, tw, th, 0x00000000);
 		}

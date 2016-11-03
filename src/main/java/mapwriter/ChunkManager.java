@@ -1,8 +1,5 @@
 package mapwriter;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import mapwriter.config.Config;
 import mapwriter.region.MwChunk;
 import mapwriter.tasks.SaveChunkTask;
@@ -14,7 +11,8 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.Map;
 
 public class ChunkManager {
 	public Mw mw;
@@ -40,8 +38,7 @@ public class ChunkManager {
 	// <-- done
 	public static MwChunk copyToMwChunk(Chunk chunk) {
 		byte[][] lightingArray = new byte[16][];
-		Map<BlockPos, TileEntity> TileEntityMap = Maps.newHashMap();
-		TileEntityMap = Utils.checkedMapByCopy(chunk.getTileEntityMap(), BlockPos.class, TileEntity.class, false);
+		Map<BlockPos, TileEntity> TileEntityMap = Utils.checkedMapByCopy(chunk.getTileEntityMap(), BlockPos.class, TileEntity.class, false);
 		char[][] dataArray = new char[16][];
 
 		ExtendedBlockStorage[] storageArrays = chunk.getBlockStorageArray();
@@ -60,6 +57,16 @@ public class ChunkManager {
 
 	public synchronized void addChunk(Chunk chunk) {
 		if (!this.closed && (chunk != null)) {
+			// FIXME: 11/1/2016 Simple fix for the overlapping chunks when swithing worlds on a hub server. .length = ~70
+			Chunk[] chunks = this.chunkMap.keySet().toArray(new Chunk[this.chunkMap.size()]);
+			for(int i = 0; i < chunks.length; i++) {
+				Chunk oldChunk = chunks[i];
+				if (oldChunk.xPosition == chunk.xPosition && oldChunk.zPosition == chunk.zPosition) {
+					this.chunkMap.remove(oldChunk);
+					break;
+				}
+			}
+			
 			this.chunkMap.put(chunk, 0);
 		}
 	}
@@ -67,7 +74,7 @@ public class ChunkManager {
 	public synchronized void removeChunk(Chunk chunk) {
 		if (!this.closed && (chunk != null)) {
 			if (!this.chunkMap.containsKey(chunk)) {
-				return; // FIXME: Is this failsafe enough for unloading?
+				return; // FIXME: Is this failsafe enough for unloading? Re- FIXME: What if I don't wanna fix you? - Its_its
 			}
 			int flags = this.chunkMap.get(chunk);
 			if ((flags & VIEWED_FLAG) != 0) {
@@ -89,7 +96,7 @@ public class ChunkManager {
 	public void updateUndergroundChunks() {
 		int chunkArrayX = (this.mw.playerXInt >> 4) - 1;
 		int chunkArrayZ = (this.mw.playerZInt >> 4) - 1;
-		MwChunk[] chunkArray = new MwChunk[9];
+		MwChunk[] chunkArray = new MwChunk[9];//XXX: Why is this here? It's redundant.
 		for (int z = 0; z < 3; z++) {
 			for (int x = 0; x < 3; x++) {
 				Chunk chunk = this.mw.mc.theWorld.getChunkFromChunkCoords(chunkArrayX + x, chunkArrayZ + z);
@@ -103,6 +110,7 @@ public class ChunkManager {
 	public void updateSurfaceChunks() {
 		int chunksToUpdate = Math.min(this.chunkMap.size(), Config.chunksPerTick);
 		MwChunk[] chunkArray = new MwChunk[chunksToUpdate];
+		
 		for (int i = 0; i < chunksToUpdate; i++) {
 			Map.Entry<Chunk, Integer> entry = this.chunkMap.getNextEntry();
 			if (entry != null) {

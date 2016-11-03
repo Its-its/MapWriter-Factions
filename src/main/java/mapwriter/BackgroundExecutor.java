@@ -1,5 +1,8 @@
 package mapwriter;
 
+import mapwriter.tasks.Task;
+import mapwriter.util.Logging;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -7,9 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import mapwriter.tasks.Task;
-import mapwriter.util.Logging;
 
 // @formatter:off
 /*
@@ -154,7 +154,7 @@ public class BackgroundExecutor {
 			String key = entry.getKey();
 			Object value = entry.getValue();
 
-			Logging.log("waiting for %d %s to finish...", value, key);
+			Logging.log("waiting for %d %s to finishRender...", value, key);
 		}
 	}
 }

@@ -1,32 +1,21 @@
 package mapwriter;
 
-import java.io.File;
-
+import mapwriter.api.MwAPI;
 import mapwriter.config.Config;
 import mapwriter.config.ConfigurationHandler;
 import mapwriter.config.WorldConfig;
 import mapwriter.fac.FactionInput;
-import mapwriter.util.FileSaving;
 import mapwriter.forge.MwForge;
 import mapwriter.forge.MwKeyHandler;
 import mapwriter.gui.MwGui;
 import mapwriter.gui.MwGuiMarkerDialog;
 import mapwriter.gui.MwGuiMarkerDialogNew;
-import mapwriter.map.MapTexture;
-import mapwriter.map.MapView;
-import mapwriter.map.Marker;
-import mapwriter.map.MarkerManager;
-import mapwriter.map.MiniMap;
-import mapwriter.map.Trail;
-import mapwriter.map.UndergroundTexture;
+import mapwriter.map.*;
 import mapwriter.overlay.OverlaySlime;
 import mapwriter.region.BlockColours;
 import mapwriter.region.RegionManager;
 import mapwriter.tasks.CloseRegionManagerTask;
-import mapwriter.util.Logging;
-import mapwriter.util.Reference;
-import mapwriter.util.Render;
-import mapwriter.util.Utils;
+import mapwriter.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
@@ -34,6 +23,12 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.config.Configuration;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 public class Mw {
 	public FactionInput facInput = new FactionInput();
@@ -136,10 +131,8 @@ public class Mw {
 		this.playerYInt = (int) Math.floor(this.playerY);
 		this.playerZInt = (int) Math.floor(this.playerZ);
 
-		if (this.mc.theWorld != null) {
-			if (!this.mc.theWorld.getChunkFromBlockCoords(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty()) {
-				this.playerBiome = this.mc.theWorld.getBiomeGenForCoords(new BlockPos(this.playerX, 0, this.playerZ)).biomeName;
-			}
+		if (!this.mc.theWorld.getChunkFromBlockCoords(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty()) {
+			this.playerBiome = this.mc.theWorld.getBiomeGenForCoords(new BlockPos(this.playerX, 0, this.playerZ)).biomeName;
 		}
 
 		// rotationYaw of 0 points due north, we want it to point due east
@@ -267,11 +260,145 @@ public class Mw {
 		this.miniMap.view.setUndergroundMode(Config.undergroundMode);
 	}
 
+	public void changeWorld(String name) {
+		if (!WorldConfig.getInstance().worldName.equals(name)) {
+			this.mc.displayGuiScreen(null);
+			this.close();
+			this.load(name.toLowerCase());
+		}
+	}
+
+	public boolean importTextures(String from, String to) {
+		if (from == null || from.isEmpty() || to == null || to.isEmpty()) return false;
+		from = from.toLowerCase();
+		to = to.toLowerCase();
+
+		WorldConfig world = WorldConfig.getInstance();
+
+		if (from.equals(to)) return false;
+		if (!from.equals("none") && !world.worldList.contains(from)) return false;
+		if (!to.equals("none") && !world.worldList.contains(to)) return false;
+
+
+		File worldDir = Mw.getInstance().worldDir;
+		boolean inMainDir = worldDir.getName().equals(Utils.getWorldName());
+
+		if (!inMainDir) {
+			//HACK: yup, at least it works :)
+			worldDir = new File(worldDir.getParent());
+			worldDir = new File(worldDir.getParent());
+		}
+
+		File toFolder = this.toMultiWorld(worldDir, to);
+		File fromFolder = this.toMultiWorld(worldDir, from);
+
+		File toImages = new File(toFolder, "images");
+		File fromImages = new File(fromFolder, "images");
+
+		File toRegions = new File(toFolder, "region");
+		File fromRegions = new File(fromFolder, "region");
+
+		try {
+			FileUtils.copyDirectory(fromImages, toImages);
+			FileUtils.copyDirectory(fromRegions, toRegions);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		Minecraft.getMinecraft().displayGuiScreen(null);
+		Mw.getInstance().close();
+		Mw.getInstance().load(to);
+
+		return true;
+	}
+
+	private File toMultiWorld(File mainDir, String name) {
+		if (!name.equals("none")) {
+			mainDir = new File(mainDir, "multiverse");
+			if (!mainDir.exists()) mainDir.mkdir();
+			mainDir = new File(mainDir, name);
+			if (!mainDir.exists()) mainDir.mkdir();
+		}
+
+		return mainDir;
+	}
+
+	public boolean importWaypoints(String from, String to) {
+		if (from == null || from.isEmpty() || to == null || to.isEmpty()) return false;
+		from = from.toLowerCase();
+		to = to.toLowerCase();
+
+		WorldConfig world = WorldConfig.getInstance();
+		Configuration config = world.worldConfiguration;
+
+		// from, to in world list?
+		if (!from.equals("none") && !world.worldList.contains(from)) return false;
+		if (!to.equals("none") && !world.worldList.contains(to)) return false;
+
+		// from, to in markers category?
+		String[] fromWaypoints = config.get("markers", from, new String[0]).getStringList();
+		String[] toWaypoints = config.get("markers", to, new String[0]).getStringList();
+
+		for (int i = 0; i < fromWaypoints.length; i++) {
+			toWaypoints = ArrayUtils.add(toWaypoints, fromWaypoints[i]);
+			this.markerManager.addMarker(this.markerManager.stringToMarker(fromWaypoints[i]));
+		}
+
+		this.markerManager.update();
+
+		config.get("markers", to, new String[0]).set(toWaypoints);
+
+		return true;
+	}
+
+	public boolean importFactions(String from, String to) {
+		if (from == null || from.isEmpty() || to == null || to.isEmpty()) return false;
+		from = from.toLowerCase();
+		to = to.toLowerCase();
+
+		WorldConfig world = WorldConfig.getInstance();
+
+		if (from.equals(to)) return false;
+		if (!from.equals("none") && !world.worldList.contains(from)) return false;
+		if (!to.equals("none") && !world.worldList.contains(to)) return false;
+
+		File worldDir = Mw.getInstance().worldDir;
+		boolean inMainDir = worldDir.getName().equals(Utils.getWorldName());
+
+		if (!inMainDir) {
+			//HACK: yup, at least it works :)
+			worldDir = new File(worldDir.getParent());
+			worldDir = new File(worldDir.getParent());
+		}
+
+		File toFolder = this.toMultiWorld(worldDir, to);
+		File fromFolder = this.toMultiWorld(worldDir, from);
+
+		File toFactions = new File(toFolder, "factions");
+		File fromFactions = new File(fromFolder, "factions");
+
+		try {
+			FileUtils.copyDirectory(fromFactions, toFactions);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		Minecraft.getMinecraft().displayGuiScreen(null);
+		Mw.getInstance().facSaving.load(fromFolder);
+		return true;
+	}
+
 	// //////////////////////////////
 	// Initialization and Cleanup
 	// //////////////////////////////
 
 	public void load() {
+		this.load(null);
+	}
+
+	public void load(String name) {
 		if (this.ready) return;
 		
 		if ((this.mc.theWorld == null) || (this.mc.thePlayer == null)) {
@@ -288,7 +415,7 @@ public class Mw {
 			if (d.isDirectory()) {
 				saveDir = d;
 			} else {
-				Logging.log("error: no such directory %s",Config.saveDirOverride);
+				Logging.log("error: no such directory %s", Config.saveDirOverride);
 			}
 		}
 
@@ -298,8 +425,28 @@ public class Mw {
 			this.worldDir = new File(new File(saveDir, "mapwriter_sp_worlds"), Utils.getWorldName());
 		}
 
+//		File worldDirCopy = this.worldDir;
+
+		if (name != null && !name.equalsIgnoreCase("none")) {
+			WorldConfig.getInstance().worldName = name;
+
+			File multi = new File(this.worldDir, "multiverse");
+			if (!multi.exists()) multi.mkdir();
+
+			this.worldDir = new File(multi, name.toLowerCase());
+			if (!multi.exists()) multi.mkdir();
+
+			// create directories
+			this.imageDir = new File(this.worldDir, "images");
+			if (!this.imageDir.exists()) {
+				this.imageDir.mkdirs();
+			}
+
+			Logging.log("Using Multiverse. Loading " + this.worldDir.getName() + ".");
+		}
+
 		// Load Factions
-		this.facSaving.load();
+		this.facSaving.load(this.worldDir);
 
 		// create directories
 		this.imageDir = new File(this.worldDir, "images");
@@ -336,15 +483,19 @@ public class Mw {
 
 		this.chunkManager = new ChunkManager(this);
 
+//		this.worldDir = worldDirCopy;
+
 		this.ready = true;
 	}
 
 	public void close() {
-
 		Logging.log("Mw.close: closing...");
 
 		if (this.ready) {
 			this.ready = false;
+			
+			//Unset Overlay
+			MwAPI.setCurrentDataProvider("None");
 
 			// Save Factions
 			this.facSaving.saveFactions();
@@ -357,9 +508,9 @@ public class Mw {
 			this.executor.addTask(new CloseRegionManagerTask(this.regionManager));
 			this.regionManager = null;
 
-			Logging.log("waiting for %d tasks to finish...", this.executor.tasksRemaining());
+			Logging.log("waiting for %d tasks to finishRender...", this.executor.tasksRemaining());
 			if (this.executor.close()) {
-				Logging.log("error: timeout waiting for tasks to finish");
+				Logging.log("error: timeout waiting for tasks to finishRender");
 			}
 			Logging.log("done");
 
@@ -376,6 +527,7 @@ public class Mw {
 			this.mapTexture.close();
 
 			WorldConfig.getInstance().saveWorldConfig();
+			WorldConfig.getInstance().nullify();
 			// this.saveConfig();
 
 			this.tickCounter = 0;
@@ -392,7 +544,6 @@ public class Mw {
 	public void onTick() {
 		this.load();
 		if (this.ready && (this.mc.thePlayer != null)) {
-
 			this.setTextureSize();
 
 			this.updatePlayer();

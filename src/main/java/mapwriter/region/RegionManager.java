@@ -1,14 +1,13 @@
 package mapwriter.region;
 
+import mapwriter.util.Logging;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import mapwriter.util.Logging;
-
-import org.apache.logging.log4j.Logger;
 
 public class RegionManager {
 
@@ -46,6 +45,7 @@ public class RegionManager {
 
 	public int maxZoom;
 	public int minZoom;
+	public boolean closeRequested;
 
 	public RegionManager(File worldDir, File imageDir, BlockColours blockColours, int minZoom, int maxZoom) {
 		this.worldDir = worldDir;
@@ -55,13 +55,14 @@ public class RegionManager {
 		this.regionFileCache = new RegionFileCache(worldDir);
 		this.minZoom = minZoom;
 		this.maxZoom = maxZoom;
+		this.closeRequested = false;
 	}
 
 	public void close() {
+		this.closeRequested = true;
+
 		for (Region region : this.regionMap.values()) {
-			if (region != null) {
-				region.close();
-			}
+			if (region != null) region.close();
 		}
 		this.regionMap.clear();
 		this.regionFileCache.close();
@@ -81,9 +82,9 @@ public class RegionManager {
 		Map<String, Integer> stats = new HashMap<String, Integer>();
 		for (Region region : this.regionMap.values()) {
 			Logging.logInfo("  %s", region);
-			incrStatsCounter(stats, String.format("dim%d", region.dimension));
-			incrStatsCounter(stats, String.format("zoom%d", region.zoomLevel));
-			incrStatsCounter(stats, "total");
+			RegionManager.incrStatsCounter(stats, String.format("dim%d", region.dimension));
+			RegionManager.incrStatsCounter(stats, String.format("zoom%d", region.zoomLevel));
+			RegionManager.incrStatsCounter(stats, "total");
 		}
 		Logging.logInfo("loaded region stats:");
 		for (Entry<String, Integer> e : stats.entrySet()) {
@@ -103,10 +104,13 @@ public class RegionManager {
 	}
 
 	public void updateChunk(MwChunk chunk) {
+		if (this.closeRequested) return;
 		this.getRegion(chunk.x << 4, chunk.z << 4, 0, chunk.dimension).updateChunk(chunk);
 	}
 
 	public void rebuildRegions(int xStart, int zStart, int w, int h, int dimension) {
+		if (this.closeRequested) return;
+
 		// read all zoom level 0 regions
 		// then find all regions with a backing image at zoom level 0
 

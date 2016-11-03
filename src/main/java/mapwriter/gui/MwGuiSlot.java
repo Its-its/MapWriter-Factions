@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
 import org.lwjgl.input.Mouse;
 
 @SideOnly(Side.CLIENT)
@@ -24,9 +23,9 @@ public abstract class MwGuiSlot {
 	public int right;
 	public int left;
 	public final int scrollBarWidth = 6;
-	/** The buttonID of the button used to scroll up */
+	/** The buttonID of the event used to scroll up */
 	private int scrollUpButtonID;
-	/** The buttonID of the button used to scroll down */
+	/** The buttonID of the event used to scroll down */
 	private int scrollDownButtonID;
 	protected int mouseX;
 	protected int mouseY;
@@ -42,7 +41,7 @@ public abstract class MwGuiSlot {
 	protected float amountScrolled;
 	/** The element in the list that was selected */
 	protected int selectedElement = -1;
-	/** The time when this button was last clicked. */
+	/** The time when this event was last clicked. */
 	protected long lastClicked;
 	/** Set to true if a selected element in this gui will show an outline box */
 	protected boolean showSelectionBox = true;

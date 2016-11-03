@@ -1,9 +1,5 @@
 package mapwriter.map;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
-
 import mapwriter.Mw;
 import mapwriter.api.IMwChunkOverlay;
 import mapwriter.api.IMwDataProvider;
@@ -14,17 +10,16 @@ import mapwriter.map.mapmode.MapMode;
 import mapwriter.util.Reference;
 import mapwriter.util.Render;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.BlockPos;
-
 import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
+import java.util.List;
 
 public class MapRenderer {
 	private Mw mw;
 	private MapMode mapMode;
 	private MapView mapView;
-	// accessed by the MwGui to check whether the mouse cursor is near the
-	// player arrow on the rendered map
+	// accessed by the MwGui to check whether the mouse cursor is near the player arrow on the rendered map
 	public Point.Double playerArrowScreenPos = new Point.Double(0, 0);
 	private int textOffset = 12;
 	private int textY = 0;
@@ -68,7 +63,7 @@ public class MapRenderer {
 		}
 		GlStateManager.pushMatrix();
 
-		if (this.mapMode.config.rotate && (this.mapMode.config.circular == true)) {
+		if (this.mapMode.config.rotate && this.mapMode.config.circular) {
 			GlStateManager.rotate(this.mw.mapRotationDegrees, 0.0f, 0.0f, 1.0f);
 		}
 		if (this.mapMode.config.circular) {
@@ -90,12 +85,17 @@ public class MapRenderer {
 			this.mw.mapTexture.requestView(req, this.mw.executor, this.mw.regionManager);
 
 			// draw the background texture
-			if (!Config.backgroundTextureMode.equals(Config.backgroundModeStringArray[0])) {
+			if (Config.backgroundTextureMode.equals(Config.backgroundModeStringArray[0])) {
+				// mode 0, no background texture
+				Render.setColourWithAlphaPercent(0x000000, this.mapMode.config.alphaPercent);
+				Render.drawRect(this.mapMode.x, this.mapMode.y, this.mapMode.w, this.mapMode.h + 1);//HACK: +1 Since it's not going to very bottom for some reason.
+			} else
+			if (!Config.backgroundTextureMode.equals(Config.backgroundModeStringArray[1])) {
 				double bu1 = 0.0;
 				double bu2 = 1.0;
 				double bv1 = 0.0;
 				double bv2 = 1.0;
-				if (Config.backgroundTextureMode.equals(Config.backgroundModeStringArray[2])) {
+				if (Config.backgroundTextureMode.equals(Config.backgroundModeStringArray[3])) {
 					// background moves with map if mode is 2
 					double bSize = tSize / 256.0;
 					bu1 = u * bSize;
@@ -106,10 +106,6 @@ public class MapRenderer {
 				this.mw.mc.renderEngine.bindTexture(Reference.backgroundTexture);
 				Render.setColourWithAlphaPercent(0xffffff, this.mapMode.config.alphaPercent);
 				Render.drawTexturedRect(this.mapMode.x, this.mapMode.y,this.mapMode.w, this.mapMode.h, bu1, bv1, bu2, bv2);
-			} else {
-				// mode 0, no background texture
-				Render.setColourWithAlphaPercent(0x000000, this.mapMode.config.alphaPercent);
-				Render.drawRect(this.mapMode.x, this.mapMode.y, this.mapMode.w, this.mapMode.h);
 			}
 
 			// only draw surface map if the request is loaded (view requests are
@@ -118,6 +114,7 @@ public class MapRenderer {
 			if (this.mw.mapTexture.isLoaded(req)) {
 				this.mw.mapTexture.bind();
 				Render.setColourWithAlphaPercent(0xffffff,this.mapMode.config.alphaPercent);
+				
 				Render.drawTexturedRect(this.mapMode.x, this.mapMode.y, this.mapMode.w, this.mapMode.h, u, v, u + w, v + h);
 			}
 		}
@@ -135,6 +132,7 @@ public class MapRenderer {
 		if (this.mapMode.config.circular) {
 			Render.disableStencil();
 		}
+		
 		GlStateManager.popMatrix();
 	}
 
@@ -158,7 +156,7 @@ public class MapRenderer {
 
 		// the arrow only needs to be rotated if the map is NOT rotated
 		GlStateManager.translate(p.x, p.y, 0.0);
-		if (!this.mapMode.config.rotate || (this.mapMode.config.circular == false)) {
+		if (!this.mapMode.config.rotate || !this.mapMode.config.circular) {
 			GlStateManager.rotate(-this.mw.mapRotationDegrees, 0.0f, 0.0f, 1.0f);
 		}
 
@@ -172,7 +170,7 @@ public class MapRenderer {
 	private void drawIcons() {
 		GlStateManager.pushMatrix();
 
-		if (this.mapMode.config.rotate && (this.mapMode.config.circular == true)) {
+		if (this.mapMode.config.rotate && this.mapMode.config.circular) {
 			GlStateManager.rotate(this.mw.mapRotationDegrees, 0.0f, 0.0f, 1.0f);
 		}
 
@@ -281,6 +279,7 @@ public class MapRenderer {
 		// z is -2000 so that it is drawn above the 3D world, but below GUI
 		// elements which are typically at -3000
 		GlStateManager.translate(this.mapMode.xTranslation, this.mapMode.yTranslation, -2000.0);
+		
 
 		// draw background, the map texture, and enabled overlays
 		this.drawMap();

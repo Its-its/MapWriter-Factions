@@ -1,16 +1,15 @@
 package mapwriter.util;
 
-import java.util.HashSet;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.Sets;
 import net.minecraft.util.ResourceLocation;
 
-import com.google.common.collect.Sets;
+import java.util.HashSet;
+import java.util.regex.Pattern;
 
 public final class Reference {
 	public static final String MOD_ID						= "MapWriter";
 	public static final String MOD_NAME 					= "MapWriter";
-	public static final String VERSION 						= "1.5";
+	public static final String VERSION 						= "2.0";
 	public static final String MOD_GUIFACTORY_CLASS 		= "mapwriter.gui.ModGuiFactoryHandler";
 	public static final String CLIENT_PROXY_CLASS 			= "mapwriter.forge.ClientProxy";
 	public static final String SERVER_PROXY_CLASS 			= "mapwriter.forge.CommonProxy";
@@ -27,9 +26,11 @@ public final class Reference {
 	
 	public static final Pattern patternInvalidChars 		= Pattern.compile("[^\\p{L}\\p{Nd}_]");
 	public static final Pattern patternInvalidChars2 		= Pattern.compile("[^\\p{L}\\p{Nd}_ -]");
-	
+
 	public static final String catWorld 					= "world";
 	public static final String catMarkers 					= "markers";
+	public static final String catRegex 					= "regex";
+	public static final String catMultiverse 				= "multiverse";
 	public static final String worldDirConfigName 			= "mapwriter.cfg";
 	public static final String blockColourSaveFileName 		= "MapWriterBlockColours.txt";
 	public static final String blockColourOverridesFileName = "MapWriterBlockColourOverrides.txt";
@@ -41,6 +42,14 @@ public final class Reference {
 	public static final ResourceLocation northArrowTexture 	= new ResourceLocation("mapwriter", "textures/map/arrow_north.png");
 	public static final ResourceLocation leftArrowTexture 	= new ResourceLocation("mapwriter", "textures/map/arrow_text_left.png");
 	public static final ResourceLocation rightArrowTexture 	= new ResourceLocation("mapwriter", "textures/map/arrow_text_right.png");
+
+	public static final ResourceLocation buttonFacTexture	= new ResourceLocation("mapwriter", "textures/button/factions.png");
+	public static final ResourceLocation buttonOptsTexture	= new ResourceLocation("mapwriter", "textures/button/options.png");
+	public static final ResourceLocation buttonOverTexture	= new ResourceLocation("mapwriter", "textures/button/overlay.png");
+	public static final ResourceLocation buttonPointTexture	= new ResourceLocation("mapwriter", "textures/button/waypoint.png");
+	public static final ResourceLocation buttongroupsTexture= new ResourceLocation("mapwriter", "textures/button/groups.png");
+	public static final ResourceLocation buttonMultiTexture	= new ResourceLocation("mapwriter", "textures/button/multiverse.png");
+	public static final ResourceLocation buttonTransTexture	= new ResourceLocation("mapwriter", "textures/button/transfer.png");
 	
 	public static final HashSet<String> PROTOCOLS 			= Sets.newHashSet(new String[] { "http", "https" });
 }
